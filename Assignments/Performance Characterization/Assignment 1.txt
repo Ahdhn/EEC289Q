@@ -1,0 +1,50 @@
+Assignment 1
+In this assignment you will characterize GPU peak arithmetic and memory-bandwidth performance. After this assignment, you should be able to build and run CUDA programs and understand how to measure performance on these programs.
+
+The deliverable for this assignment is a 2-page PDF writeup and a zip file with your source code. You must do this assignment alone (no groups). You are welcome to discuss your approach and solutions with other students, and we encourage you to do so (use the Slack channel!), but any work you turn in / results you cite must be yours alone.
+
+Part 1.
+Read, understand, and run the CUDA programs from this Parallel Forall tutorial:
+
+https://devblogs.nvidia.com/parallelforall/even-easier-introduction-cuda/ (Links to an external site.)Links to an external site.
+
+At the bottom of the post (“Summing Up”) is the results for three experiments run on each of two platforms. You should run these three experiments on both (a) a snake machine (snake.ece.ucdavis.edu) and (b) the K40 in mc.ece.ucdavis.edu. These experiments show achieved memory bandwidth using (1) one CUDA thread, (2) one CUDA block, and (3) many CUDA blocks. For each of these, also compute the achieved fraction of the GPU’s theoretical peak memory bandwidth (i.e., if the theoretical peak is 200 GB/s and you achieve 80 GB/s, the achieved fraction is 0.4).
+
+Then, on the GPU of your choice, plot the following:
+
+Achieved memory bandwidth as a function of the number of threads per block (where the number of blocks is constant and large)
+Achieved memory bandwidth as a function of the number of blocks (where the number of threads per block is constant, say 256 threads/block)
+Roughly, both of these plots should increase with the value on the x axis and then level off. For both graphs, explain the significance of the point at which they level off, both the x value (the number of threads per block or the number of blocks) and the y value (the achieved memory bandwidth). Why does the performance level off at this point?
+
+Inherent in this assignment is that you will compile and run CUDA code on a server. It is our hope this will be straightforward, but we will help you if you have problems.
+
+It is OK if you don’t 100% understand every bit of these experiments when you run them (you might not understand every nuance of the code). We will go over this code in class between now and the final due date for this assignment. It will do you well to run all these experiments in the near future, try to understand as best you can but not worrying if there’s something you missed, and then come to the lecture where I talk about them with some experience under your belt ready to ask some questions.
+
+You should aim to have this part complete within a week.
+
+Part 2.
+You can do this on either a snake machine or mc (or your own machine); you don’t have to do it for multiple machines.
+
+For parts 2.1 and 2.2 of the code below, you will be modifying the kernel from the previous part. Note that although the kernel is called "add", we are now simply trying to push the GPU to its limits, and your modified code does not have to do anything useful (like adding). Be very careful that any changes that you make to your code be changes that will actually affect the output and will not be removed by the compiler. For instance, if you do a lot of math to compute a variable that you then never use, the compiler will (properly) generate code that does not contain any of that math. The compiler is Very Good at identifying dead code and removing it. In the code from Part 1, all kernel operations contribute to a computation that is then read back to the CPU and compared against the correct answer. Make sure that all changes you make to your code have the same behavior, or else the compiler will eliminate them and your bandwidth calculations will be incorrect. (Note: passing compiler flags "-O0 -Xcicc -O0 -Xptxas -O0" to nvcc can possibly turn off optimizations and prevent the compiler from optimizing away code, but this is not guaranteed).
+
+In the previous part, you (hopefully) wrote code that resulted in a sustained data bandwidth that was a significant fraction of the memory bandwidth of your GPU. What is that bandwidth? Change your Part 1 code to maximize achieved memory bandwidth. It is likely that you will want to pursue a combination of (a) reading / writing more data in each thread (not just read 8 bytes and write 4, but more) and (b) reading / writing more data per memory transaction (so instead of reading a float, read a float4 [4 floats with one read, look at the CUDA programming guide for more info]).What changes did you make to your code from Part 1 to maximize achieved memory bandwidth? How does this compare with the theoretical maximum memory bandwidth?
+In the code that you wrote that sustains the highest memory bandwidth, what is the arithmetic throughput (measured in FLOPS, floating-point operations per second)? How does that compare to the theoretical maximum FLOPS of your GPU? (You can find this on Wikipedia.) It is likely you are sustaining only a small fraction of the theoretical maximum FLOPS. Change your code to maximize the achieved FLOPS. You should increase the amount of arithmetic you do in each thread (to be more precise, you should increase the ratio between the number of arithmetic operations and the number of memory operations). What changes did you make to maximize FLOPS?
+The ratio between arithmetic operations and memory operations in a kernel is called the “arithmetic intensity”, measured in FLOPs/byte. What is the arithmetic intensity of your final kernels in parts 2.1 and 2.2?
+The GPU has a natural balance point between arithmetic and memory operations. If the kernel has way more memory operations than arithmetic, then the kernel is “memory bound” and the performance of the kernel is limited by the memory system of the GPU. (Hopefully your kernel in part 2.1 is memory bound.) Conversely, if the kernel has way more arithmetic operations than memory, the kernel is “arithmetic bound” and the performance of the kernel is limited by the arithmetic performance of the GPU. (Hopefully your kernel in part 2.2 is arithmetic bound.) In between is a balance point where the kernel is equally limited by arithmetic and memory performance. By adding or removing arithmetic operations in your kernel from part 2.2, find that balance point on your GPU. You will measure that balance point in FLOPs/byte (i.e., “the balance point of my GPU is N FLOPs/byte”).
+Deliverables
+A short (~2 page) PDF writeup of your findings + a zip file of your source code. The source code should be the three different kernels you used for parts 2.1, 2.2, and 2.4. This writeup should answer the questions in the assignment (the ones in bold) and should also include:
+
+2.1: the total number of memory operations, the runtime, and the achieved memory bandwidth computed from the previous two numbers
+2.2: the total number of floating point operations, the runtime, and the achieved FLOPS computed from the previous two numbers
+2.4: the total number of memory operations, the total number of floating point operations, and the FLOPs per byte at the balance point computed from the previous two numbers.
+For all parts, include the GPU used, the size of N (number of data items to process), the number of blocks, and the number of threads.
+Note on measuring GPU runtime:
+
+We will only be measuring the runtime of the CUDA kernel itself, excluding the time it takes to move data between the host and device. To measure runtime for this assignment, use nvprof name_of_executable. Your output will look something like:
+
+Type Time(%) Time Calls Avg Min Max Name
+
+GPU activities: 100.00% 453.76us 1 453.76us 453.76us 453.76us add(int, float*, float*)
+...etc
+
+In the line marked by "GPU Activities", the rightmost item is the name of the kernel ("add" in this case). The number under "Time" is the runtime you'll want to use (453.76us in this case).
