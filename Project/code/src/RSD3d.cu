@@ -9,6 +9,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -16,7 +17,6 @@
 
 
 typedef double real; //Change this between double or (float) single precision
-
 
 static void HandleError(cudaError_t err, const char *file, int line) {
 	//Error handling micro, wrap it around function whenever possible
@@ -28,9 +28,10 @@ static void HandleError(cudaError_t err, const char *file, int line) {
 }
 #define HANDLE_ERROR( err ) (HandleError( err, __FILE__, __LINE__ ))
 
+
 void PointsGen(std::string FileName, int Num){
 	//generate Num points inside a unit box
-	std::fstream file(FileName, std::ios::out);
+	std::fstream file(FileName.c_str(), std::ios::out);
 	file.precision(30);
 	file << Num << std::endl;
 
@@ -87,7 +88,7 @@ void DeviceQuery(int dev = 0){
 	printf("\n  Memory Clock Rate: %d(kHz)", devProp.memoryClockRate);
 	printf("\n  Memory Bus Width: %d(bits)", devProp.memoryBusWidth);
 	const double maxBW = 2.0 * devProp.memoryClockRate*(devProp.memoryBusWidth / 8.0) / 1.0E3;
-	printf("\n  Peak Memory Bandwidth: %f(MB/s)\n", maxBW);
+	printf("\n  Peak Memory Bandwidth: %f(MB/s)\n\n", maxBW);
 }
 void ReadPoints(std::string FileName, int&NumPoints, real**&Points){
 	//Read the input set of points
@@ -95,7 +96,7 @@ void ReadPoints(std::string FileName, int&NumPoints, real**&Points){
 	//the file should start with the number points
 	//and then list (x,y,z) of the points
 	std::fstream file;
-	file.open(FileName);
+	file.open(FileName.c_str());
 
 	NumPoints = 0;
 	file >> NumPoints;
@@ -107,18 +108,20 @@ void ReadPoints(std::string FileName, int&NumPoints, real**&Points){
 		file >> Points[i][0] >> Points[i][1] >> Points[i][2];
 	}
 	file.close();
+	std::cout<<" NumPoints= "<<NumPoints<<std::endl;
 }
 
 int main(int argc, char**argv){
 	//0) Generate the input points
-	//PointsGen("tiny.txt", 10);
+	//PointsGen("../data/tiny.txt", 10);
+
 
 	DeviceQuery();
 
 	//1) Read input set of points
 	int NumPoints;
 	real ** Points=NULL;
-	ReadPoints("tiny.txt",NumPoints, Points);
+	ReadPoints("../data/tiny.txt",NumPoints, Points);
 
 
 	//2) Build Data Structure
