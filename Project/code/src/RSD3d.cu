@@ -1,4 +1,5 @@
-//Applying Recursive Spoke Darts on GPU using CUDA 
+// Final project EEC289Q - Winter 2018
+// Applying Recursive Spoke Darts on GPU using CUDA
 //https://www.sciencedirect.com/science/article/pii/S1877705816333380
 
 #include <cuda.h>
@@ -8,13 +9,13 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <stdlib.h>  
+#include <stdlib.h>
 #include <stdio.h>
 
 #include "tree.cpp"
 
 
-typedef double real; //Change this between double or (float) single precision 
+typedef double real; //Change this between double or (float) single precision
 
 
 static void HandleError(cudaError_t err, const char *file, int line) {
@@ -35,25 +36,25 @@ void PointsGen(std::string FileName, int Num){
 
 	for (int v = 0; v < Num; v++){
 		file << double(rand()) / double(RAND_MAX) << " " <<
-			    double(rand()) / double(RAND_MAX) << " " << 
-				double(rand()) / double(RAND_MAX) << std::endl;
+			      double(rand()) / double(RAND_MAX) << " " <<
+				    double(rand()) / double(RAND_MAX) << std::endl;
 	}
 	file.close();
 }
 void DeviceQuery(int dev = 0){
 
-	//Display few releven information about the device 
+	//Display few releven information about the device
 	int deviceCount;
 	cudaGetDeviceCount(&deviceCount);
 	if (deviceCount == 0){
 		printf("\n deviceCount is zero. I quit!!!");
 		exit(EXIT_FAILURE);
 	}
-		
+
 	cudaSetDevice(dev);
 
 	cudaDeviceProp devProp;
-	HANDLE_ERROR(cudaGetDeviceProperties(&devProp, dev));	
+	HANDLE_ERROR(cudaGetDeviceProperties(&devProp, dev));
 	printf("\n  Total number of device: %d", deviceCount);
 	printf("\n  Using device Number: %d", dev);
 	printf("\n  Device name: %s", devProp.name);
@@ -88,11 +89,11 @@ void DeviceQuery(int dev = 0){
 	const double maxBW = 2.0 * devProp.memoryClockRate*(devProp.memoryBusWidth / 8.0) / 1.0E3;
 	printf("\n  Peak Memory Bandwidth: %f(MB/s)\n", maxBW);
 }
-void ReadPoints(std::string FileName, int&NumPoints, real**&Points){	
+void ReadPoints(std::string FileName, int&NumPoints, real**&Points){
 	//Read the input set of points
-	//Points should be un-initialized 
+	//Points should be un-initialized
 	//the file should start with the number points
-	//and then list (x,y,z) of the points 
+	//and then list (x,y,z) of the points
 	std::fstream file;
 	file.open(FileName);
 
@@ -113,29 +114,29 @@ int main(int argc, char**argv){
 	//PointsGen("tiny.txt", 10);
 
 	DeviceQuery();
-	
+
 	//1) Read input set of points
 	int NumPoints;
 	real ** Points=NULL;
 	ReadPoints("tiny.txt",NumPoints, Points);
 
 
-	//2) Build Data Structure 
+	//2) Build Data Structure
 
 
 	//3) Move Data to GPU
 
 
-	//4) Launch kernels and record time 
+	//4) Launch kernels and record time
 
 
 
-	//5) Check correctness of the construction 
+	//5) Check correctness of the construction
 
 
-	//6) Release memory 
+	//6) Release memory
 
-	
-	
+
+
 	return 0;
 }
