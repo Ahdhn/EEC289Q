@@ -1,0 +1,50 @@
+In this assignment, you will implement the Kronecker product of two matrices. You can read all about it in the Wikipedia article:
+
+https://en.wikipedia.org/wiki/Kronecker_product (Links to an external site.)Links to an external site.
+
+but in short, for A x B, each element a of A is replaced by a matrix that is aB (where a is a scalar and B is the entire matrix B). Thus the size of the output matrix is equal to the product of the sizes of the two input matrices.
+
+The deliverable for this assignment is a 2-page PDF writeup and one source file. You must do this assignment alone (no groups). You are welcome to discuss your approach and solutions with other students, and we encourage you to do so (use the Slack channel!), but any work you turn in / results you cite must be yours alone.
+
+This is a relatively straightforward product to compute. While it takes some care to ensure the addressing arithmetic is correct, it is only a few lines of kernel code to compute it. The focus of this assignment is instead on performance. You will be evaluated in part on how fast your (correct) code can compute the Kronecker product on the K40 in mc.ece.ucdavis.edu.
+
+At a high level, you need to optimize two Kronecker products:
+
+A product where A is large and B is no larger than 16 kB
+A product where both A and B are large
+You will write these products in such a way that they can be auto-graded by the TA (your code will link into his scaffolding code).
+
+We suggest the following sequence:
+
+Write a simple kronecker product kernel that correctly computes the Kronecker product, without any worries about efficiency. Explain how you mapped the work in computing the kronecker product to threads/warps/blocks.
+Write a high-performance Kronecker product kernel that assumes the B matrix is no larger than 16 kB. How can you optimize for this case?
+Write a high-performance Kronecker product kernel that assumes both the A and B matrices are large.
+In your write-up, for 2) and 3), explain what the performance bottlenecks are for the computation, how your optimizations address those bottlenecks, and what the benefit is from your optimizations.
+
+Possible considerations when writing your high-performance kernels:
+
+Memory coalescing
+Thread mapping: what work does a single thread do? Is it assigned one input element, one output element, or something else? What does a single block do? You get to pick.
+Use of shared memory for faster access and/or reuse
+Blocking (as we did in class with dense matrix-dense matrix multiply)
+Cache efficiency (can you leverage the cache to get reuse out of any input data?)
+Deliverables:
+To simplify things, you can assume the input matrices are square and have dimensions that are powers of 2. You will turn in one file named kronecker.cu. Do not include a “main” function in kronecker.cu. For testing, you can have “main” in a different file or just delete “main” before you turn in the file. Your file should contain two functions with the following signatures and two GPU kernels:
+
+void KroneckerGPUSmall(int M, int N, float* A, float* B, float* C)
+
+void KroneckerGPU(int M, int N, float* A, float* B, float* C)
+
+__global__ void KroneckerKernelSmall(...)
+
+__global__ void KroneckerKernel(...)
+
+All functions and kernels must match the names above. The two non-kernel functions must also have the exact parameters as above. For the kernels, you can have as many parameters as you like. KroneckerGPU should launch the kernel KroneckerKernel and KroneckerGPUSmall should launch the kernel KroneckerKernelSmall.
+
+For the two non-kernel functions, M is the length and width of square matrix A and N is the length and width of square Matrix B. C is the output of the function and is the (M x N) x (M x N) square matrix resulting from the kronecker product of A and B. All matrices are in row-major order. You can assume that A, B, and C are pre-allocated to the appropriate sizes. You can also assume that A and B already have desired values, so you do not need to modify them. Your functions are not responsible for freeing the memory of A, B, or C. In the KroneckerGPU* functions, you are responsible for allocating data, transfering data, and freeing data in GPU memory. Only your kernels will be timed. You will determine the number of threads per block and the number of blocks for your kernels.
+
+For the function and kernel labeled “small”, you have the additional assumption that matrix B is less than 16 KB. The implementation for this case should be relatively simple.
+
+In the Assignment 2 file folder on Canvas, a file called reference.cpp contains a simple CPU implementation of the Kronecker product. You can use it to verify that your GPU implementation produces the correct results.  Keep in mind that CPU and GPU results might not match exactly due to FP precision differences.
+
+You will be evaluated on the speed of your code and your optimization efforts. You are expected to use shared memory, unless you somehow find a way to get faster results than you would when using shared memory. Kernel code must be well-documented.
