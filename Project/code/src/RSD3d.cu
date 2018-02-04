@@ -12,8 +12,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-
 #include "tree.cpp"
+#include "RSD_imp.cu"
+#include "spokes.cu"
 
 
 typedef double real; //Change this between double or (float) single precision
@@ -97,6 +98,11 @@ void ReadPoints(std::string FileName, int&NumPoints, real**&Points){
 	//and then list (x,y,z) of the points
 	std::fstream file;
 	file.open(FileName.c_str());
+	if (!file.is_open()){
+		std::cout << " Error:: Can not open "<<FileName << std::endl;
+		exit(EXIT_FAILURE);
+	}
+
 
 	NumPoints = 0;
 	file >> NumPoints;
