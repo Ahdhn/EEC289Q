@@ -17,7 +17,7 @@ void ReadMMFile(const char filename[], bool** graph, int* V)
    string line;
    ifstream infile(filename);
    if (infile.fail()) {
-      printf("Failed to open %s\n", filename);
+	   printf("Failed to open %s\n", filename);
       return;
    }
 
@@ -77,8 +77,10 @@ void ReadColFile(const char filename[], bool** graph, int* V)
          *graph = new bool[num_rows * num_rows];
          memset(*graph, 0, num_rows * num_rows * sizeof(bool));
          continue;
-      } else if (s != "e")
-         continue;
+	  }
+	  else if (s != "e"){
+		  continue;
+	  }
       
       iss >> node1 >> node2;
 
@@ -231,26 +233,37 @@ void GreedyColoring(bool* graph, int V, int** color)
    }
 } 
 
+
+
 int main(int argc, char* argv[])
 {
    bool* graph;
    int V;
    int* color;
    
-   if (string(argv[1]).find(".col") != string::npos)
-      ReadColFile(argv[1], &graph, &V);
-   else if (string(argv[1]).find(".mm") != string::npos) 
-      ReadMMFile(argv[1], &graph, &V);
-   else
-      return -1;
+   if (argc < 2){
+	   printf(" No input file given!!! \n");
+	   return -1;
+   }
+   if (string(argv[1]).find(".col") != string::npos){
+	   ReadColFile(argv[1], &graph, &V);
+   }
+   else if (string(argv[1]).find(".mm") != string::npos){
+	   ReadMMFile(argv[1], &graph, &V);
+   }
+   else{
+	   printf(" Invalid input file!!! \n");
+	   return -1;
+   }
 
- //  GraphColoring(graph, V, &color);
- //  printf("Brute-foce coloring found solution with %d colors\n", CountColors(V, color));
- //  printf("Valid coloring: %d\n", IsValidColoring(graph, V, color));
-
-   GreedyColoring(graph, V, &color);
-   printf("Greedy coloring found solution with %d colors\n", CountColors(V, color));
+   GraphColoring(graph, V, &color);
+   printf("Brute-foce coloring found solution with %d colors\n", CountColors(V, color));
    printf("Valid coloring: %d\n", IsValidColoring(graph, V, color));
+
+   //GreedyColoring(graph, V, &color);
+   //printf("Greedy coloring found solution with %d colors\n", CountColors(V, color));
+   //printf("Valid coloring: %d\n", IsValidColoring(graph, V, color));
+   PrintSolution(color, V);
    
    return 0;
 }
