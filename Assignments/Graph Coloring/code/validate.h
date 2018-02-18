@@ -43,7 +43,8 @@ bool IsValidColoring(bool* graph, int V, T* color)
 }
 
 /* A utility function to print solution */
-void PrintSolution(int* color, int V)
+template<typename T>
+void PrintSolution(T* color, int V)
 {
 	printf("Solution Exists:"
 		" Following are the assigned colors \n");

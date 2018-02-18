@@ -23,7 +23,6 @@ static void HandleError(cudaError_t err, const char *file, int line) {
 #include "cuda_query.cu"
 
 
-
 int main(int argc, char* argv[])
 {
 	cuda_query(3); //Set the deivde number here 
@@ -69,12 +68,30 @@ int main(int argc, char* argv[])
    //5) Color Vertices in paralllel
    unsigned char* color;
    HANDLE_ERROR(cudaMallocManaged(&color, NumRow*sizeof(unsigned char)));
+   memset(color, 0, NumRow );   
+   bool*set;
+   HANDLE_ERROR(cudaMallocManaged(&set, NumRow*sizeof(bool)));
+   memset(set, 0, NumRow); 
+   
+   int numBlocks(1), numThreads(1);
+   if(NumRow < 1024){//if it is less than 1024 vertex, then launch one block 
+   	numBlocks = 1;
+   	numThreads = 1024;
+   }else{//otherwise, launch as many as 1024-blocks as you need    	
+   	numBlocks = (NumRow/1024) + 1;
+   	numThreads = 1024;
+   }
+
+
+   graphColoring <<<numBlocks, numThreads>>> (NumRow, numNNZ, col_id, offset, color, set);   
+   cudaDeviceSynchronize();
    /***********************************************************************/
 
 
    //6) Validate parallel solution 
    printf("Parallel solution has %d colors\n", CountColors(V, color));
    printf("Valid coloring: %d\n\n", IsValidColoring(graph, V, color));
+   //PrintSolution(color,V);
    /***********************************************************************/
 
 
@@ -84,6 +101,7 @@ int main(int argc, char* argv[])
    //printf("Valid coloring: %d\n", IsValidColoring(graph, V, color));
 
    GreedyColoring(graph, V, &color);
+   printf("\n***************\n");
    printf("Greedy solution has %d colors\n", CountColors(V, color));
    printf("Valid coloring: %d\n\n", IsValidColoring(graph, V, color));
    //PrintSolution(color,V);

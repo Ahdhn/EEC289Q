@@ -156,7 +156,7 @@ void printCSR(uint32_t numNNZ, uint32_t NumRow, uint32_t *col_id, uint32_t*offse
 	std::cout<<""<<std::endl;
 
 	std::cout<< " CSR::offset->"<<std::endl;
-	for(int i=0;i<NumRow;i++){
+	for(int i=0;i<NumRow + 1;i++){
 		std::cout<<"	"<<offset[i];		
 	}
 	std::cout<<""<<std::endl;
