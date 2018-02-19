@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
    }
 
 
-   graphColoring <<<numBlocks, numThreads>>> (NumRow, numNNZ, col_id, offset, color, set);   
+   coloring <<<numBlocks, numThreads>>> (NumRow, numNNZ, col_id, offset, color, set);   
    cudaDeviceSynchronize();
    /***********************************************************************/
 
