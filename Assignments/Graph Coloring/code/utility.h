@@ -145,6 +145,39 @@ void getCSR(uint32_t&numNNZ, uint32_t&NumRow, bool* graph, uint32_t *&col_id, ui
   offset[NumRow] = numNNZ;
 }
 
+//Extract CSR format from the dense adjacency matrix
+void getLowTrCSR(uint32_t&numNNZ, uint32_t&NumRow, bool* graph, uint32_t *&col_id, uint32_t*&offset){
+  //numNNZ is the total number of the non-zero entries in the matrix
+  //graph is the input graph  (all memory should be allocated)
+ 
+  int num = 0;
+  offset[0]=num;
+  for(int i=1;i<NumRow;i++){ 
+//    std::cout<<"row"<<i<<std::endl;
+
+    bool done = false;
+    for(int j=0; j<i; j++){//ideally it is NumCol but our matrix is symmetric
+//	std::cout<<"colum"<<j<<std::endl;
+      if(graph[i*NumRow + j]){
+        col_id[num]=j;
+//        std::cout<<"col_id["<<num<<"]= "<<col_id[num]<<std::endl;
+        if(!done){
+          offset[i]=num;
+//	  std::cout<<"offset["<<i<<"]= "<<offset[i]<<std::endl;
+          done = true;
+        }
+        num++;
+      }
+    }
+    if(!done){
+	offset[i]=num;
+//	std::cout<<"offset["<<i<<"]= "<<offset[i]<<std::endl;
+	done = true;
+    }
+  }
+  offset[NumRow] = numNNZ/2;
+}
+
 void printCSR(uint32_t numNNZ, uint32_t NumRow, uint32_t *col_id, uint32_t*offset)
 {
 	//print the CSR arries 
