@@ -84,7 +84,7 @@ void GenNewNodes(uint32_t *nodes, uint32_t *newNodes, uint32_t *neighLen, uint32
 
 
 
-void conflict_resolve_forgetabout_sharedmemory(uint32_t* conflict_color, // Array of conflict vetices grouped by color
+int conflict_resolve_forgetabout_sharedmemory(uint32_t* conflict_color, // Array of conflict vetices grouped by color
                       uint32_t *conflict_color_offset, // offset of different color on conflit_color 
                       uint32_t *tr_col_id, // CSR of graph, but only lower triangle part
                       uint32_t *tr_offset, // CSR offset of graph, but only lower triangle part
@@ -99,6 +99,7 @@ void conflict_resolve_forgetabout_sharedmemory(uint32_t* conflict_color, // Arra
 	int start = conflict_color_offset[colorID];
 	int end = conflict_color_offset[colorID+1];
 	int sizeNode = end-start;
+	if(sizeNode==0) return numColor;
 	std::cout<<"start: "<<start<<" end: "<<end<<" sizeNode: "<<sizeNode <<std::endl;
 	nodes = conflict_color+start;
 	HANDLE_ERROR(cudaMallocManaged(&changeColor, sizeNode*sizeof(uint32_t)));
@@ -125,9 +126,14 @@ void conflict_resolve_forgetabout_sharedmemory(uint32_t* conflict_color, // Arra
 		std::cout<<"changeColor["<<i<<"]= "<<changeColor[i]<<"  ";
 	}
 	std::cout<<std::endl;
+		for(int i=0; i<numVertices; i++)
+		{
+			printf("color[%d]=%u  ", i, color[i]);
+		}
+		std::cout<<std::endl;
 
 	int choseL = 0;
-	int counter = 1;
+	int counter = 0;
 	neighLen = neighLen1;
 	int theColor = colorID;
 	void  *d_temp_storage = NULL;
@@ -173,9 +179,16 @@ void conflict_resolve_forgetabout_sharedmemory(uint32_t* conflict_color, // Arra
 		FindChangeColor<<<1,32>>>(changeColor, sizeNode, nodes, scanArray, scanArray[sizeNode], tr_col_id, tr_offset);
 		cudaDeviceSynchronize();
 
-		Conflict_assignColor<<<1,32>>>(changeColor, theColor, color, nodes, sizeNode);
-		cudaDeviceSynchronize();
 		theColor = numColor+counter;
+		if(counter!=0)
+			Conflict_assignColor<<<1,32>>>(changeColor, theColor, color, nodes, sizeNode);
+		cudaDeviceSynchronize();
+
+		for(int i=0; i<numVertices; i++)
+		{
+			 printf("color[%d]=%u  ", i, color[i]);
+		}
+		std::cout<<std::endl;
 
 		DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, changeColor, scanArray, sizeNode+1);	
 		cudaDeviceSynchronize();
@@ -225,4 +238,6 @@ void conflict_resolve_forgetabout_sharedmemory(uint32_t* conflict_color, // Arra
 		std::cout<<"counter: "<<counter<<std::endl;
 		counter++;
 	}	
+	std::cout<<counter<<" color is added, total number of color is "<<theColor<<std::endl;
+	return theColor;
 }

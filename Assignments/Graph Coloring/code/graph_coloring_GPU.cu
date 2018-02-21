@@ -96,8 +96,26 @@ int main(int argc, char* argv[])
    conflict_offset[5]=4;
    int numColor = 5;
 
-   conflict_resolve_forgetabout_sharedmemory(conflict_vertices, conflict_offset, lowTr_col, lowTr_offset, NumRow, numNNZ/2, numColor, color, 0);
+   color[0]=3;
+   color[1]=1;
+   color[2]=2;
+   color[3]=1;
+   color[4]=1;
+   color[5]=5;
+   color[6]=4;
+   color[7]=3;
+   color[8]=2;
+   color[9]=2;
+   color[10]=1;
+   color[11]=1;
 
+   int newNumColor = numColor;
+   for(int i=0; i<numColor; i++)
+   {
+	std::cout<<"===========================================color"<<i<<"=========================================================="<<std::endl;	
+	newNumColor = conflict_resolve_forgetabout_sharedmemory(conflict_vertices, conflict_offset, lowTr_col, lowTr_offset, NumRow, numNNZ/2, newNumColor, color, i);
+	std::cout<<"================================================================================================================="<<std::endl;	
+   }
 //   conflict_resolve<32, 1><<<1, 32, 100*sizeof(uint32_t)>>>(conflict_vertices, conflict_offset, lowTr_col, lowTr_offset, NumRow, numNNZ/2, numColor, color);
 //   cudaDeviceSynchronize();
 
