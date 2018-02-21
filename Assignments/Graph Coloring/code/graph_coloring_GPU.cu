@@ -22,7 +22,7 @@ static void HandleError(cudaError_t err, const char *file, int line) {
 #include "coloring.cu"
 #include "cuda_query.cu"
 #include "conflict_resolve.cu"
-#include "hello.cu"
+#include "conflict_resolve_forgetabout_sharedmemory.cu"
 
 
 int main(int argc, char* argv[])
@@ -96,8 +96,10 @@ int main(int argc, char* argv[])
    conflict_offset[5]=4;
    int numColor = 5;
 
-   conflict_resolve<32, 1><<<1, 32, 100*sizeof(uint32_t)>>>(conflict_vertices, conflict_offset, lowTr_col, lowTr_offset, NumRow, numNNZ/2, numColor, color);
-   cudaDeviceSynchronize();
+   conflict_resolve_forgetabout_sharedmemory(conflict_vertices, conflict_offset, lowTr_col, lowTr_offset, NumRow, numNNZ/2, numColor, color, 0);
+
+//   conflict_resolve<32, 1><<<1, 32, 100*sizeof(uint32_t)>>>(conflict_vertices, conflict_offset, lowTr_col, lowTr_offset, NumRow, numNNZ/2, numColor, color);
+//   cudaDeviceSynchronize();
 
 //   bool*set;
 //   HANDLE_ERROR(cudaMallocManaged(&set, NumRow*sizeof(bool)));
