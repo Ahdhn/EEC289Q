@@ -17,9 +17,9 @@ int CountColors(int V, T* color)
 	}
 
 	return num_colors;
-}
+} 
 
-
+ 
 // Returns true if the color assignment is valid for the graph
 template<typename T>
 bool IsValidColoring(bool* graph, int V, T* color)
@@ -28,6 +28,30 @@ bool IsValidColoring(bool* graph, int V, T* color)
 		for (int j = 0; j < V; j++) {
 			if (graph[i * V + j]) {
 				if (i != j && color[i] == color[j]) {
+					printf("Vertex %d and Vertex %d are connected and have the same color %d\n", i, j, color[i]);
+					return false;
+				}
+				if (color[i] < 1) {
+					printf("Vertex %d has invalid color %d\n", i, color[i]);
+					return false;
+				}
+			}
+		}
+	}
+
+	return true;
+}
+
+// Returns true if the color assignment is valid for the graph
+template<typename T>
+bool IsValidColoring_Blocked(bool* graph, int V, T* color, uint32_t blockSize)
+{
+	for (int i = 0; i < V; i++) {
+		for (int j = 0; j < V; j++) {
+			if (graph[i * V + j]) {
+				if (i != j && 
+					floor(int(j)/int(blockSize)) == floor(int(i)/int(blockSize)) &&
+				    color[i] == color[j]) {
 					printf("Vertex %d and Vertex %d are connected and have the same color %d\n", i, j, color[i]);
 					return false;
 				}

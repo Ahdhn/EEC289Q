@@ -6,7 +6,7 @@ void ReadMMFile(const char filename[], bool** graph, int* V, uint32_t*numNNZ, ui
    string line;
    ifstream infile(filename);
    if (infile.fail()) {
-	   printf("Failed to open %s\n", filename);
+     printf("Failed to open %s\n", filename);
      exit(EXIT_FAILURE);
    }
 
@@ -63,7 +63,7 @@ void ReadMMFile(const char filename[], bool** graph, int* V, uint32_t*numNNZ, ui
 
 
 // Read DIMACS graphs
-// Assumes input nodes are numbered starting from 1
+// Assumes input node s are numbered starting from 1
 void ReadColFile(const char filename[], bool** graph, int* V, uint32_t*numNNZ, uint32_t*NumRow)
 {
    using namespace std;
@@ -120,6 +120,40 @@ void ReadColFile(const char filename[], bool** graph, int* V, uint32_t*numNNZ, u
 
 }
 
+//Extract CSR format from the dense adjacency matrix
+//Here we we only get blocks of the CSR 
+//for each vertex i connected to j, store j in the col_id iff j is in the block of i
+
+void getBlockedCSR(uint32_t&numNNZ, uint32_t&NumRow, bool* graph, uint32_t *&col_id, uint32_t*&offset,
+                  uint32_t blockSize){
+  //numNNZ is the total number of the non-zero entries in the matrix
+  //graph is the input graph  (all memory should be allocated)  
+ 
+  int num = 0;
+  for(int i=0; i<NumRow; i++){ 
+
+    //bool done = false;
+    offset[0] = 0;
+    for(int j=0; j<NumRow; j++){//ideally it is NumCol but our matrix is symmetric
+      if(graph[i*NumRow + j]){
+        
+        if(floor(int(j)/int(blockSize)) == floor(int(i)/int(blockSize))){
+          col_id[num]=j;
+          //std::cout<<"col_id["<<num<<"]= "<<col_id[num]<<"  "<<std::endl;
+          //if(!done){
+          //  offset[i]=num;
+          //  std::cout<< "offset["<< i<<"]= "<<offset[i]<<std::endl;
+          //  done = true;
+          //}
+          num++;          
+        }
+      }
+    }
+    offset[i+1] = num;
+  }
+  //offset[NumRow] = numNNZ;
+  //offset[NumRow] = newNumNNZ;
+}
 
 //Extract CSR format from the dense adjacency matrix
 void getCSR(uint32_t&numNNZ, uint32_t&NumRow, bool* graph, uint32_t *&col_id, uint32_t*&offset){
@@ -133,7 +167,7 @@ void getCSR(uint32_t&numNNZ, uint32_t&NumRow, bool* graph, uint32_t *&col_id, ui
     for(int j=0; j<NumRow; j++){//ideally it is NumCol but our matrix is symmetric
       if(graph[i*NumRow + j]){
         col_id[num]=j;
-        //std::cout<<"col_id["<<num<<"]= "<<col_id[num]<<"	";
+        //std::cout<<"col_id["<<num<<"]= "<<col_id[num]<<"  ";
         if(!done){
           offset[i]=num;
           done = true;
@@ -157,22 +191,22 @@ void getLowTrCSR(uint32_t&numNNZ, uint32_t&NumRow, bool* graph, uint32_t *&col_i
 
     bool done = false;
     for(int j=0; j<i; j++){//ideally it is NumCol but our matrix is symmetric
-//	std::cout<<"colum"<<j<<std::endl;
+//  std::cout<<"colum"<<j<<std::endl;
       if(graph[i*NumRow + j]){
         col_id[num]=j;
 //        std::cout<<"col_id["<<num<<"]= "<<col_id[num]<<std::endl;
         if(!done){
           offset[i]=num;
-//	  std::cout<<"offset["<<i<<"]= "<<offset[i]<<std::endl;
+//    std::cout<<"offset["<<i<<"]= "<<offset[i]<<std::endl;
           done = true;
         }
         num++;
       }
     }
     if(!done){
-	offset[i]=num;
-//	std::cout<<"offset["<<i<<"]= "<<offset[i]<<std::endl;
-	done = true;
+  offset[i]=num;
+//  std::cout<<"offset["<<i<<"]= "<<offset[i]<<std::endl;
+  done = true;
     }
   }
   offset[NumRow] = numNNZ/2;
@@ -180,17 +214,17 @@ void getLowTrCSR(uint32_t&numNNZ, uint32_t&NumRow, bool* graph, uint32_t *&col_i
 
 void printCSR(uint32_t numNNZ, uint32_t NumRow, uint32_t *col_id, uint32_t*offset)
 {
-	//print the CSR arries 
-	std::cout<<" CSR::numNNZ-> "<<numNNZ <<"   CSR::NumRow->"<<NumRow<<std::endl;
-	std::cout<< " CSR::col_id->"<<std::endl;
-	for(int i=0; i<numNNZ; i++){
-		std::cout<<"	"<< col_id[i];
-	}
-	std::cout<<""<<std::endl;
+  //print the CSR arries 
+  std::cout<<" CSR::numNNZ-> "<<numNNZ <<"   CSR::NumRow->"<<NumRow<<std::endl;
+  std::cout<< " CSR::col_id->"<<std::endl;
+  for(int i=0; i<numNNZ; i++){
+    std::cout<<"  "<< col_id[i];
+  }
+  std::cout<<""<<std::endl;
 
-	std::cout<< " CSR::offset->"<<std::endl;
-	for(int i=0;i<NumRow + 1;i++){
-		std::cout<<"	"<<offset[i];		
-	}
-	std::cout<<""<<std::endl;
+  std::cout<< " CSR::offset->"<<std::endl;
+  for(int i=0;i<NumRow + 1;i++){
+    std::cout<<"  "<<offset[i];   
+  }
+  std::cout<<""<<std::endl;
 }
