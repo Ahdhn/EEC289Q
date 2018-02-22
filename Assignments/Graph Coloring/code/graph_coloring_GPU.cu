@@ -22,7 +22,8 @@ static void HandleError(cudaError_t err, const char *file, int line) {
 #include "coloring.cu"
 #include "cuda_query.cu"
 #include "conflict_resolve.cu"
-#include "conflict_resolve_forgetabout_sharedmemory.cu"
+//#include "conflict_resolve_forgetabout_sharedmemory.cu"
+#include "conflict_resolve_forgetabout_sharedmemory1.cu"
 
 
 int main(int argc, char* argv[])
@@ -113,7 +114,7 @@ int main(int argc, char* argv[])
    for(int i=0; i<numColor; i++)
    {
 	std::cout<<"===========================================color"<<i<<"=========================================================="<<std::endl;	
-	newNumColor = conflict_resolve_forgetabout_sharedmemory(conflict_vertices, conflict_offset, lowTr_col, lowTr_offset, NumRow, numNNZ/2, newNumColor, color, i);
+	newNumColor = conflict_resolve_forgetabout_sharedmemory1(conflict_vertices, conflict_offset, lowTr_col, lowTr_offset, NumRow, numNNZ/2, newNumColor, color, i);
 	std::cout<<"================================================================================================================="<<std::endl;	
    }
 //   conflict_resolve<32, 1><<<1, 32, 100*sizeof(uint32_t)>>>(conflict_vertices, conflict_offset, lowTr_col, lowTr_offset, NumRow, numNNZ/2, numColor, color);
