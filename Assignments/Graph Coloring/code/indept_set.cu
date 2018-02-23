@@ -2,7 +2,7 @@ __device__ __forceinline__
 //void indept_set(uint32_t NumRow, uint32_t numNNZ, uint32_t *col_id, uint32_t *offset, bool*set, bool useMax, unsigned char* color, int&numColored){
 void indept_set(const uint32_t tid,
 	            const uint32_t my_offset_start,
-	            const uint32_t my_offset_end,	            
+	            const uint32_t my_offset_end,	             
 	            const uint32_t start_row,
 	            const uint32_t end_row,
                 uint32_t * const sh_col_id,    
@@ -10,11 +10,12 @@ void indept_set(const uint32_t tid,
                 int&numColored,
                 bool useMax,
                 bool*&sh_set
-                ){		
+                ){		 
 
 	if(tid < NumRow){//only if my vertex was not colored before
 
 		bool inSet = true;
+
 		for(uint32_t i = my_offset_start; i < my_offset_end; i++){//read inside the shared col id
 			//avoid thread diveregnce by arthematics 				
 			uint32_t j = sh_col_id[i];
@@ -42,7 +43,7 @@ void indept_set(const uint32_t tid,
 		}
 
 
-		__syncthreads();
+		/*__syncthreads();
 		if(threadIdx.x == 0 && blockIdx.x == 0) {
 			printf("\n The ind set is: \n");
 			for(int i=0;i<NumRow;i++){
@@ -51,7 +52,7 @@ void indept_set(const uint32_t tid,
 				}
 			}
 			printf("\n");			
-		}
+		}*/
 
 	}
 }

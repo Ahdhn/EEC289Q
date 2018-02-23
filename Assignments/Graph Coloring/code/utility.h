@@ -1,6 +1,7 @@
 // Read MatrixMarket graphs
 // Assumes input nodes are numbered starting from 1
-void ReadMMFile(const char filename[], bool** graph, int* V, uint32_t*numNNZ, uint32_t*NumRow)
+void ReadMMFile(const char filename[], bool** graph, int* V, uint32_t*numNNZ, uint32_t*NumRow,
+                const uint32_t blockingSize,uint32_t*numNNZ_blocked)
 {
    using namespace std;
    string line;
@@ -11,6 +12,7 @@ void ReadMMFile(const char filename[], bool** graph, int* V, uint32_t*numNNZ, ui
    }
 
    (*numNNZ)=0;
+   (*numNNZ_blocked)=0;
 
    // Reading comments
    while (getline(infile, line)) {
@@ -51,6 +53,9 @@ void ReadMMFile(const char filename[], bool** graph, int* V, uint32_t*numNNZ, ui
          //&& !(*graph)[(node2) * (*NumRow) + (node1)]
         ){
            (*numNNZ)++;
+         if(floor(int(node1)/int(blockingSize)) == floor(int(node2)/int(blockingSize))){
+          (*numNNZ_blocked)++;
+         }
       }
 
       (*graph)[(node1) * (*NumRow) + (node2)] = true;
@@ -59,12 +64,14 @@ void ReadMMFile(const char filename[], bool** graph, int* V, uint32_t*numNNZ, ui
    infile.close();
 
    (*numNNZ)*=2;
+   (*numNNZ_blocked)*=2;
 }
 
 
 // Read DIMACS graphs
 // Assumes input node s are numbered starting from 1
-void ReadColFile(const char filename[], bool** graph, int* V, uint32_t*numNNZ, uint32_t*NumRow)
+void ReadColFile(const char filename[], bool** graph, int* V, uint32_t*numNNZ, uint32_t*NumRow,
+                 const uint32_t blockingSize,uint32_t*numNNZ_blocked)
 {
    using namespace std;
    string line;
@@ -106,6 +113,9 @@ void ReadColFile(const char filename[], bool** graph, int* V, uint32_t*numNNZ, u
          //&& !(*graph)[(node2) * (*NumRow) + (node1)]
          ){
            (*numNNZ)++;
+           if(floor(int(node1)/int(blockingSize)) == floor(int(node2)/int(blockingSize))){
+            (*numNNZ_blocked)++;
+           }
       }
 
       // Assume node numbering starts at 1
@@ -116,47 +126,40 @@ void ReadColFile(const char filename[], bool** graph, int* V, uint32_t*numNNZ, u
 
   
   (*numNNZ)*=2;
-  
-
+  (*numNNZ_blocked)*=2;
 }
 
 //Extract CSR format from the dense adjacency matrix
 //Here we we only get blocks of the CSR 
 //for each vertex i connected to j, store j in the col_id iff j is in the block of i
 
-void getBlockedCSR(uint32_t&numNNZ, uint32_t&NumRow, bool* graph, uint32_t *&col_id, uint32_t*&offset,
-                  uint32_t blockSize){
+void getBlockedCSR(uint32_t&NumRow, bool* graph, uint32_t *&col_id, uint32_t*&offset, uint32_t blockSize, uint32_t & maxLeftout){
   //numNNZ is the total number of the non-zero entries in the matrix
   //graph is the input graph  (all memory should be allocated)  
  
-  int num = 0;
-  for(int i=0; i<NumRow; i++){ 
-
-    //bool done = false;
-    offset[0] = 0;
+  int num = 0;  
+  maxLeftout = 0;
+  for(int i=0; i<NumRow; i++){       
+    uint32_t myLeftout = 0;
     for(int j=0; j<NumRow; j++){//ideally it is NumCol but our matrix is symmetric
+      
       if(graph[i*NumRow + j]){
-        
+
         if(floor(int(j)/int(blockSize)) == floor(int(i)/int(blockSize))){
-          col_id[num]=j;
-          //std::cout<<"col_id["<<num<<"]= "<<col_id[num]<<"  "<<std::endl;
-          //if(!done){
-          //  offset[i]=num;
-          //  std::cout<< "offset["<< i<<"]= "<<offset[i]<<std::endl;
-          //  done = true;
-          //}
+          col_id[num]=j;          
           num++;          
+        }else{
+          myLeftout++;
         }
       }
     }
-    offset[i+1] = num;
+    offset[i+1] = num;    
+    maxLeftout = max(maxLeftout, myLeftout);
   }
-  //offset[NumRow] = numNNZ;
-  //offset[NumRow] = newNumNNZ;
 }
 
 //Extract CSR format from the dense adjacency matrix
-void getCSR(uint32_t&numNNZ, uint32_t&NumRow, bool* graph, uint32_t *&col_id, uint32_t*&offset){
+void getCSR(uint32_t numNNZ, uint32_t&NumRow, bool* graph, uint32_t *&col_id, uint32_t*&offset){
   //numNNZ is the total number of the non-zero entries in the matrix
   //graph is the input graph  (all memory should be allocated)
  
@@ -227,4 +230,19 @@ void printCSR(uint32_t numNNZ, uint32_t NumRow, uint32_t *col_id, uint32_t*offse
     std::cout<<"  "<<offset[i];   
   }
   std::cout<<""<<std::endl;
+}
+
+uint32_t maxNNZ_per_segment(uint32_t*offset, uint32_t NumRow, uint32_t segment_length){
+   //count the max number of nonzero elements within a segment_length of offset array
+   //i.e., how many nonzero elements between row i and row j such that j-i = segment_length
+   uint32_t max_seg = 0;
+   
+
+   for(uint32_t seg_start=0; seg_start < NumRow; seg_start+= segment_length) {      
+      uint32_t seg_end = (seg_start + segment_length < NumRow ) ? seg_start+segment_length : NumRow;
+      uint32_t my_len = offset[seg_end] - offset[seg_start];
+      //std::cout<<" seg_start= "<<seg_start<< " seg_end= "<<seg_end<<" my_len= "<<my_len<< " offset[seg_end]= "<< offset[seg_end]<< " offset[seg_start]= "<< offset[seg_start]<<std::endl;
+      if (my_len > max_seg){max_seg = my_len;}
+   }
+   return max_seg;
 }

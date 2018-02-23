@@ -4,22 +4,29 @@
 
 #define NUM_COLOR_PER_THREAD 1 //this is changed to be more than one, then we need to move my_offset_start and my_offset_end to be in shared memory instead 
 
- __device__ int numColored = 0; 
+ __device__ int numColored = 0;  
 
 __global__ void coloring(uint32_t NumRow, //number of vertices (= number of rows in adjacency matrix)
 	                     uint32_t *col_id, //the column id in the CSR format 
 	                     uint32_t *offset, //the row offset in the CSR
-	                     unsigned char* color //the color of the vertices (output)	                     
+	                     unsigned char* color, //the color of the vertices (output)	                     
+	                     int*numColors,//the total colors that has been assigned 	                     
+	                     uint32_t*numberVerticesPerColor
 	                     ){
+	
+	                     
 
 	//Every block will own number of vertices equal to blockDim.x 
 	//We need to move the data (col_id, offset) for the block's vertices 
 	//The color of each vertex will be stored in a register (since one vertex is handeled by one thread)
 	//and will write just once at the end (coalesced write)
+	if(threadIdx.x == 0 && blockIdx.x == 0){
+		(*numColors)=0;
+	}
 		
 	unsigned char my_thd_colors [NUM_COLOR_PER_THREAD];//the colos that this thread will do
+#pragma unroll 	
 	for(uint32_t i=0; i < NUM_COLOR_PER_THREAD; i++){ my_thd_colors[i]=0; }//initialize with no color 
-
 
 	extern __shared__ bool shrd_ptr[];
 	bool* sh_set = shrd_ptr;// the independent set of this block (has to be in shared memory because thread/vertex i needs to know if thread/vertex j is in the set or not when getting the independant set)
@@ -38,11 +45,12 @@ __global__ void coloring(uint32_t NumRow, //number of vertices (= number of rows
 
 	const uint32_t tid = start_row + threadIdx.x;//equal to this thread's vertex id
 
+#pragma unroll 
 	for(uint32_t i= threadIdx.x; i + start_row < end_row ; i+=blockDim.x) {//make sure that we 		                                                               //don't go beyound offste []
 		my_offset_start = offset[i + start_row];
 		my_offset_end = offset[i + 1 + start_row];//hopefully this is cached 
 	}
-
+#pragma unroll 
 	for(uint32_t i= threadIdx.x; i< NUM_COLOR_PER_THREAD*blockDim.x; i+=blockDim.x){
 		sh_set[i] = false;
 	}
@@ -66,6 +74,7 @@ __global__ void coloring(uint32_t NumRow, //number of vertices (= number of rows
 	my_offset_end -= start_col_id;
 
 	//move the col_id (coalesced read)
+#pragma unroll 	
 	for(uint32_t i = threadIdx.x; i < myNNZ; i+=blockDim.x){
 		sh_col_id[i] = col_id[start_col_id + i]; 
 
@@ -89,8 +98,12 @@ __global__ void coloring(uint32_t NumRow, //number of vertices (= number of rows
 		__syncthreads();				
 		currentColor++;		
 	}		
-	//move color to global memory 	
-	color[tid] = my_thd_colors[0];
+	//move color to global memory
+	if(tid < NumRow){
+		color[tid] = my_thd_colors[0];				
+		atomicMax(numColors,int(color[tid]));
+		atomicAdd(&numberVerticesPerColor[my_thd_colors[0]], uint32_t(1));
+	}
 }
 
 
@@ -115,8 +128,5 @@ __global__ void coloring(uint32_t NumRow, //number of vertices (= number of rows
 		__syncthreads();
 		//filter();
 		currentColor++;	
-		
-		
-	}	
-	
+	}		
 }*/

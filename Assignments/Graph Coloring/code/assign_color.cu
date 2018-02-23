@@ -3,7 +3,7 @@ void assign_color(const uint32_t set_id,
                   const  uint32_t currentColor, 
                   const uint32_t NumRow,  
                   bool*sh_set, 
-                  unsigned char my_thd_colors[],
+                  unsigned char my_thd_colors[], 
                   uint32_t color_id){
 
 	//Assigne color k to vertices marked as true in set array
@@ -11,6 +11,7 @@ void assign_color(const uint32_t set_id,
 		my_thd_colors[color_id] = my_thd_colors[color_id] + (my_thd_colors[color_id]==0)*
 		                                                    currentColor*
 		                                                    sh_set[set_id];
+        
 	}
 }
 
