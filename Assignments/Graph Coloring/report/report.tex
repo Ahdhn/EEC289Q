@@ -38,9 +38,14 @@
 %\end{figure}
 
 \section{Algorithm Details:}
+Generally, there are two approach to do graph coloring: 1) independent set based 2) greedy algrithm based. In our work, we chose to use independent set based algorithm. Basically we generate each node a random number, and for each node, it can be added to the current independent set only if it has the maxinum random number among its neighbors. So this method ensure every node within the same independent set, they are not connected since they can not be maxinum at the same time. Next iteraion we find the maxinum vertex on nodes left (exclude nodes which are in the independent sets) and form a new indepedent set. The algorithm continues untill all the nodes belong to independent sets.
+
+\subsection{An naive implementation}
+An naive implementation: 
 
 
-\section{Experiments:}
+
+\section{Implementation:}
 
 
 
