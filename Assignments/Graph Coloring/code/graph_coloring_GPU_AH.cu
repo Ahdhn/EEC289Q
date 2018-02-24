@@ -42,7 +42,7 @@ int main(int argc, char* argv[]){
 
    bool* graph;
    int V;     
-   const uint32_t blockingSize = 10;//TODO
+   const uint32_t blockingSize = 3;//TODO
    uint32_t numNNZ=0;
    uint32_t NumRow=0; 
    uint32_t numNNZ_blocked = 0;
@@ -106,8 +106,8 @@ int main(int argc, char* argv[]){
    const uint32_t shrd_mem = numThreads*sizeof(bool) + max_NNZ_per_block*numThreads*sizeof(uint32_t);
    coloring <<<numBlocks, numThreads, shrd_mem>>> (NumRow, col_id, offset, color, numColor,numberVerticesPerColor); 
    cudaDeviceSynchronize();     
-   HANDLE_ERROR(cudaFree(offset));//free what you dont need 
-   HANDLE_ERROR(cudaFree(col_id));
+ //  HANDLE_ERROR(cudaFree(offset));//free what you dont need 
+//   HANDLE_ERROR(cudaFree(col_id));
 
 
    //B) Get conflicting graph
@@ -132,7 +132,7 @@ int main(int argc, char* argv[]){
    getLowTrCSR(numNNZ, NumRow, graph, lowTr_col, lowTr_offset);
 
    int newNumColor = (*numColor);
-   for(int i=0; i < (*numColor); i++){
+   for(int i=1; i <= (*numColor); i++){
       newNumColor = conflict_resolve_forgetabout_sharedmemory1(conflict_vertices, conflict_offset, lowTr_col, lowTr_offset, NumRow, numNNZ/2, newNumColor, color, i);
    }
 
@@ -145,23 +145,29 @@ int main(int argc, char* argv[]){
    //PrintSolution(color,V);  
    //exit(0);   
 
+   printf("\n*********************************\n");
+   int* colorInt;
+   HANDLE_ERROR(cudaMallocManaged(&colorInt, NumRow*sizeof(int)));   
+   memset(colorInt, 0, NumRow);   
+
    //6) Validate parallel solution 
-   //printf("Parallel solution has %d colors\n", CountColors(V, color));
-   //printf("Valid coloring: %d\n\n", IsValidColoring(graph, V, color));
-   //PrintSolution(color,V);
+   printf("Parallel solution has %d colors\n", CountColors(V, color));
+   printf("Valid coloring: %d\n\n", IsValidColoring(graph, V, color));
+   PrintSolution(color,V);
    /***********************************************************************/
 
+   printf("\n*********************************\n");
 
    //7) Color Vertices on CPU
-   //GraphColoring(graph, V, &color);
-   //printf("Brute-foce solution has %d colors\n", CountColors(V, color));   
-   //printf("Valid coloring: %d\n", IsValidColoring(graph, V, color));
+   GraphColoring(graph, V, &colorInt);
+   printf("Brute-foce solution has %d colors\n", CountColors(V, colorInt));   
+   printf("Valid coloring: %d\n", IsValidColoring(graph, V, colorInt));
 
    //GreedyColoring(graph, V, &color);
-   //printf("\n*********************************\n");
-   //printf("Greedy solution has %d colors\n", CountColors(V, color));
-   //printf("Valid coloring: %d\n\n", IsValidColoring(graph, V, color));
-   //PrintSolution(color,V);
+   printf("\n*********************************\n");
+   printf("Greedy solution has %d colors\n", CountColors(V, colorInt));
+   printf("Valid coloring: %d\n\n", IsValidColoring(graph, V, colorInt));
+   PrintSolution(colorInt,V);
    /***********************************************************************/
 
 

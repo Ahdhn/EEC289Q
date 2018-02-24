@@ -82,6 +82,14 @@ void WorkItemRank(int *scan, int *lbs, int *wir, int sizeLbs) {
 	}
 }
 
+__global__
+void ResetChangeColor(int sizeNode, uint32_t *changeColor) {
+	for(int i=blockIdx.x*blockDim.x+threadIdx.x; i<sizeNode; i+=blockDim.x*gridDim.x)
+	{
+		changeColor[i]=0;
+	}
+}
+
 
 
 int conflict_resolve_forgetabout_sharedmemory1(uint32_t* conflict_color, // Array of conflict vetices grouped by color
@@ -138,7 +146,7 @@ int conflict_resolve_forgetabout_sharedmemory1(uint32_t* conflict_color, // Arra
 	int choseL = 0;
 	int counter = 1;
 	neighLen = neighLen1;
-	int theColor = colorID+1;
+	int theColor = colorID;
 	void  *d_temp_storage = NULL;
     	size_t    temp_storage_bytes = 0;
 	DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, neighLen, scanArray, sizeNode+1);
@@ -186,8 +194,7 @@ int conflict_resolve_forgetabout_sharedmemory1(uint32_t* conflict_color, // Arra
 		cudaDeviceSynchronize();
 
 		theColor = numColor+counter;
-//		if(counter!=0)
-			Conflict_assignColor<<<1,32>>>(changeColor, theColor, color, nodes, sizeNode);
+		Conflict_assignColor<<<1,32>>>(changeColor, theColor, color, nodes, sizeNode);
 		cudaDeviceSynchronize();
 
 		for(int i=0; i<numVertices; i++)
@@ -227,6 +234,8 @@ int conflict_resolve_forgetabout_sharedmemory1(uint32_t* conflict_color, // Arra
 		GenNewNodes<<<1,32>>>(nodes, newNodes, neighLen, newNeighLen, sizeNode, scanArray);
 		cudaDeviceSynchronize();
 		sizeNode = scanArray[sizeNode];
+		ResetChangeColor<<<1,32>>>(sizeNode, changeColor);
+		cudaDeviceSynchronize();
 		if(sizeNode == 0) break;
 
 		printf("new sizeNode: %d\n", sizeNode);
@@ -248,5 +257,14 @@ int conflict_resolve_forgetabout_sharedmemory1(uint32_t* conflict_color, // Arra
 		std::cout<<std::endl;
 	}	
 	std::cout<<counter-1<<" color is added, total number of color is "<<theColor-1<<std::endl;
+	cudaFree(nodes1);
+	cudaFree(nodes2);
+	cudaFree(neighLen1);
+	cudaFree(neighLen2);
+	cudaFree(changeColor);
+	cudaFree(scanArray);
+	cudaFree(d_temp_storage);
+	cudaFree(lbs);
+	cudaFree(wir);
 	return theColor-1;
 }
