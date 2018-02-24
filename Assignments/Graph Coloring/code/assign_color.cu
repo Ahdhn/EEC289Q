@@ -1,6 +1,6 @@
 __device__ __forceinline__ 
 void assign_color(const uint32_t set_id, 
-                  const  uint32_t currentColor, 
+                  const  unsigned char currentColor, 
                   const uint32_t NumRow,  
                   bool*sh_set, 
                   unsigned char my_thd_colors[], 
@@ -8,6 +8,10 @@ void assign_color(const uint32_t set_id,
 
 	//Assigne color k to vertices marked as true in set array
 	if(set_id < NumRow){		
+		//if(threadIdx.x == 0){
+		//	printf("\n currentColor=%u, my_thd_colors[%d]= %d, sh_set[%d]=%d\n", 
+		//		       currentColor, color_id, my_thd_colors[color_id],set_id ,sh_set[set_id]);
+		//}
 		my_thd_colors[color_id] = my_thd_colors[color_id] + (my_thd_colors[color_id]==0)*
 		                                                    currentColor*
 		                                                    sh_set[set_id];

@@ -80,7 +80,6 @@ __global__ void coloring(uint32_t NumRow, //number of vertices (= number of rows
 	//move the col_id (coalesced read)
 #pragma unroll 	
 	for(uint32_t i = threadIdx.x; i < myNNZ; i+=blockDim.x){
-
 		sh_col_id[i] = col_id[start_col_id + i];
 
 	}
@@ -97,8 +96,7 @@ __global__ void coloring(uint32_t NumRow, //number of vertices (= number of rows
 		__syncthreads();			
 		assign_color(tid, currentColor, NumRow, sh_set, my_thd_colors, 0);		
 		__syncthreads();				
-		currentColor++;		
-		break;
+		currentColor++;				
 	}		
 	//move color to global memory
 	if(tid < NumRow){
