@@ -68,7 +68,41 @@ When we run local graph coloring, we use the algorithm we describe above and ign
 
 \section{Implementation:}
 
+\subsection{Local graph coloring}
 
+\subsection{Conflict resolve}
+After the steps above, we have the conflict graph which is a format of CSR grouped by color. We process each color in sequence. We can definitely process all the color generated in previous step in parallel and each block will get one color, so there is a load balancing problem and we don't have time to do that. 
 
+Give an array of conflict nodes of same color, we resolve the conflict by finding the neighbors of each node who have the same color and comparing the node ID with its conflict neighbor's ID, the one with lower ID will not change color, the one with higher ID will assigne a new color. For example nodes [1,2,3,4] are conflict nodes whose color is red. node 1 connects to node 3, node 2 connects to node 4. Then we run the algorithm, node 1 will find node 3 is its neighbor, but node 3's ID is higher, then, node 1 will not change its color. Node 3 will find node 1 is its neighbor, and node 1's ID is lower than its ID, then, node 3 will change its color to a new color purple. Some thing for node 2 and node 4, node 2 will not change its color and node 4 will change its color to new color purple. Then we need to review those nodes who assign new color again to ensure they are not conflict to each other. Then we find out node 3's neighbor, and find out node 3 doesn't have conflict neighbors, and for node 4, find out node 4 doesn't have conflict neighbors. Then the conflict nodes originally in color red now are resolved. If node 3 and node 4 are connected, then, we will find out node 3 won't change color since it has lower ID and node 4 will be assigned a new color yellow. We will need to review all the changed color nodes again which is node 4 and find out node 4 doesn't have conflict and all the conflict resolved. 
+
+We do the above process for each color sequentially. After that, we can resolve all the conflict. 
+
+There are some implementation optimization:
+\begin{itemize}
+\item When we get a node and need to find out its neighbor, since the neighbor whose ID is higher than the node, we won't change the node's color. We should not exam its neighbor whose ID is higher. We can acchive this by just using the lower triangle of the graph adjacency matrix. 
+
+\item What we start with is an array of conflict nodes.
+
+\begin{figure}[!tbh]
+\centering        
+   \subfloat {\includegraphics[width=0.65\textwidth]{confre.jpg}}
+   \caption{ }
+   \label{fig:fig3}
+\end{figure} 
+
+We want to get each node's neighbor list to tell if we need change this nodes' color. However if we map each thread to a node in the node array and read its neighbor list and seeif the node need change color, we will have very unbalanced work load for each thread, since the neighbor list for each node can vary a lot, then we are wasting computing cycle waiting for the thread who works on the longest neighbor list. We would prefer each thread work on each neighbor of each node. To have enough information to acchieve this mapping, we need to do extra work:
+\begin{figure}[!tbh]
+\centering        
+   \subfloat {\includegraphics[width=0.65\textwidth]{scanlbswir.jpg}}
+   \caption{ }
+   \label{fig:fig4}
+\end{figure} 
+
+First we ask each thread to load a neighbor of a node and save it in register. To do this, each thread need to know which node's neighbor list, and the position of that neighbor in that neighbor list. To compute which node's neighbor list each thread need to access, we fist compute neighlen array by each thread get the neighbor list's length of each node, then we do scan on neighlen and compute load balancing search on the scan result. To compute the postion each thread should access in assigned neighbor list, we compute the work item rank (wir) array by computing $lbs[i]=i-scan[lbs[i]]$. After this, each thread can access each neighbor just using $tr\_col\_id[tr\_offset[nodes[lbs[i]]] + wir[i]]$, where $tr\_col\_id$ is the CSR column ID array for the conflict graph and $tr\_offset$ is the CSR row offset array for the conflict graph. Now we can exam the neighbor's color and produce a predicate array of if change color. Using this changeColor array, we can assign new color to nodes who need change color and do scan on changeColor, we can compact those nodes who need change color into a new array. Then go back to the top of the loop until there is no node who need to change color.
+
+\end{itemize}
+
+\section{Other approach}
+Another good approach is to distribute nodes to different blocks and generate a random number each iteration and synchronize all the blocks using cooperative group in CUDA 9 or above. Then we can keep the neighbor list in the share memory all the time. One consideration is it is better for each node have a different random number otherwise it will increase the number of iteration to finish coloring. If we set the random number range large enough, the probability to get same random number for different nodes is very low.
 
 \end{document}
