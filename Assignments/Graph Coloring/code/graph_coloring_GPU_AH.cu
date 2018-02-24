@@ -75,6 +75,7 @@ int main(int argc, char* argv[]){
    HANDLE_ERROR(cudaMallocManaged(&numberVerticesPerColor, NumRow*sizeof(uint32_t)));
    memset(numberVerticesPerColor, 0, NumRow);   
    /***********************************************************************/
+   std::cout<<" NumRow+ 1= "<<NumRow+1<<std::endl;
 
 
    //3) Get graph in CSR format 
@@ -103,22 +104,21 @@ int main(int argc, char* argv[]){
 
    //A) Do local colring 
    uint32_t max_NNZ_per_block= maxNNZ_per_segment(offset, NumRow, blockingSize);      
-   const uint32_t shrd_mem = numThreads*sizeof(bool) + max_NNZ_per_block*numThreads*sizeof(uint32_t);
-   coloring <<<numBlocks, numThreads, shrd_mem>>> (NumRow, col_id, offset, color, numColor,numberVerticesPerColor); 
+   uint32_t shrd_mem = numThreads*sizeof(bool) + max_NNZ_per_block*numThreads*sizeof(uint32_t);
+   shrd_mem *= 2;
+   coloring <<<numBlocks, numThreads, shrd_mem>>> (NumRow, col_id, offset, color, numColor,numberVerticesPerColor);
    cudaDeviceSynchronize();     
- //  HANDLE_ERROR(cudaFree(offset));//free what you dont need 
-//   HANDLE_ERROR(cudaFree(col_id));
+   HANDLE_ERROR(cudaFree(offset));//free what you dont need 
+   HANDLE_ERROR(cudaFree(col_id));
 
 
    //B) Get conflicting graph
    uint32_t *conflict_vertices(NULL), *conflict_offset(NULL);   
    HANDLE_ERROR(cudaMallocManaged(&conflict_offset, ((*numColor) +1)*sizeof(uint32_t)));
    HANDLE_ERROR(cudaMallocManaged(&conflict_vertices, NumRow*sizeof(uint32_t)));   
-   HANDLE_ERROR(cub::DeviceScan::ExclusiveSum(d_temp_storage,temp_storage_bytes, 
-                                              numberVerticesPerColor,conflict_offset, (*numColor)+2));
+   HANDLE_ERROR(cub::DeviceScan::ExclusiveSum(d_temp_storage,temp_storage_bytes, numberVerticesPerColor,conflict_offset, (*numColor)+2));
    HANDLE_ERROR(g_allocator.DeviceAllocate(&d_temp_storage, temp_storage_bytes));   
-   HANDLE_ERROR(cub::DeviceScan::ExclusiveSum(d_temp_storage,temp_storage_bytes, 
-                                              numberVerticesPerColor,conflict_offset, (*numColor)+2));
+   HANDLE_ERROR(cub::DeviceScan::ExclusiveSum(d_temp_storage,temp_storage_bytes, numberVerticesPerColor,conflict_offset, (*numColor)+2));
    cudaDeviceSynchronize();
    HANDLE_ERROR(cudaFree(numberVerticesPerColor));
    uint32_t items_in_sh_mem = min(40*1024, NumRow);//same as bytes of sh mem since colors are unisgned char 
