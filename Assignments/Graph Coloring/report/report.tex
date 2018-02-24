@@ -44,7 +44,7 @@ Generally, there are two approach to do graph coloring: 1) independent set based
 An naive implementation: 
 \begin{figure}[!tbh]
 \centering        
-   \subfloat {\includegraphics[width=0.65\textwidth]{naive.jpg}}
+   \subfloat {\includegraphics[width=0.3\textwidth]{naive.jpg}}
    \caption{ }
    \label{fig:fig1}
 \end{figure}
@@ -59,7 +59,7 @@ Now just think about how to use shared memroy, if we distributed nodes to differ
 We propose this communication free graph coloring approach:
 \begin{figure}[!tbh]
 \centering        
-   \subfloat {\includegraphics[width=0.65\textwidth]{comfree.jpg}}
+   \subfloat {\includegraphics[width=0.3\textwidth]{comfree.jpg}}
    \caption{ }
    \label{fig:fig2}
 \end{figure} 
@@ -85,7 +85,7 @@ There are some implementation optimization:
 
 \begin{figure}[!tbh]
 \centering        
-   \subfloat {\includegraphics[width=0.65\textwidth]{confre.jpg}}
+   \subfloat {\includegraphics[width=0.3\textwidth]{confre.jpg}}
    \caption{ }
    \label{fig:fig3}
 \end{figure} 
@@ -93,7 +93,7 @@ There are some implementation optimization:
 We want to get each node's neighbor list to tell if we need change this nodes' color. However if we map each thread to a node in the node array and read its neighbor list and seeif the node need change color, we will have very unbalanced work load for each thread, since the neighbor list for each node can vary a lot, then we are wasting computing cycle waiting for the thread who works on the longest neighbor list. We would prefer each thread work on each neighbor of each node. To have enough information to acchieve this mapping, we need to do extra work:
 \begin{figure}[!tbh]
 \centering        
-   \subfloat {\includegraphics[width=0.65\textwidth]{scanlbswir.jpg}}
+   \subfloat {\includegraphics[width=0.3\textwidth]{scanlbswir.jpg}}
    \caption{ }
    \label{fig:fig4}
 \end{figure} 
