@@ -42,7 +42,7 @@ int main(int argc, char* argv[]){
 
    bool* graph;
    int V;     
-   const uint32_t blockingSize = 3;//TODO
+   const uint32_t blockingSize = 6;//TODO
    uint32_t numNNZ=0;
    uint32_t NumRow=0; 
    uint32_t numNNZ_blocked = 0;
@@ -159,9 +159,9 @@ int main(int argc, char* argv[]){
    printf("\n*********************************\n");
 
    //7) Color Vertices on CPU
-   GraphColoring(graph, V, &colorInt);
-   printf("Brute-foce solution has %d colors\n", CountColors(V, colorInt));   
-   printf("Valid coloring: %d\n", IsValidColoring(graph, V, colorInt));
+  // GraphColoring(graph, V, &colorInt);
+  // printf("Brute-foce solution has %d colors\n", CountColors(V, colorInt));   
+  // printf("Valid coloring: %d\n", IsValidColoring(graph, V, colorInt));
 
    //GreedyColoring(graph, V, &color);
    printf("\n*********************************\n");
