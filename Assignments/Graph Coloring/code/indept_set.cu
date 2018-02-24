@@ -5,7 +5,7 @@ void indept_set(const uint32_t tid,
 	            const uint32_t my_offset_end,	             
 	            const uint32_t start_row,
 	            const uint32_t end_row,
-                uint32_t * const sh_col_id,    
+                const uint32_t * const sh_col_id,    
                 const uint32_t NumRow,
                 int&numColored,
                 bool useMax,
@@ -33,8 +33,13 @@ void indept_set(const uint32_t tid,
 					              tid > j ||//if j id (or rand num) is less than i, ignore               
 					              sh_set[j]  //if j is been already in the set, ignore
 					              );
+				/*if(tid == 0){
+					printf("\n inSet= %d, i= %d, j= %d, (j<start_row||j>=end_row)= %d, (tid>j)= %d\n",
+					           inSet, i, j, (j<start_row||j>=end_row), tid > j);
+				}*/
 			}
 		}
+		//__syncthreads();
 
 		sh_set[tid] = inSet;
 
@@ -46,7 +51,7 @@ void indept_set(const uint32_t tid,
 		/*__syncthreads();
 		if(threadIdx.x == 0 && blockIdx.x == 0) {
 			printf("\n The ind set is: \n");
-			for(int i=0;i<NumRow;i++){
+			for(int i=0; i<NumRow; i++){
 				if(sh_set[i]){
 					printf(" %d ", i );
 				}

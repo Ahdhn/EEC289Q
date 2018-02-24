@@ -256,14 +256,16 @@ int main(int argc, char* argv[])
 	   return -1;
    }
 
+   GreedyColoring(graph, V, &color);
+   printf("Greedy coloring found solution with %d colors\n", CountColors(V, color));
+   printf("Valid coloring: %d\n", IsValidColoring(graph, V, color));
+
    GraphColoring(graph, V, &color);
    printf("Brute-foce coloring found solution with %d colors\n", CountColors(V, color));
    printf("Valid coloring: %d\n", IsValidColoring(graph, V, color));
 
-   //GreedyColoring(graph, V, &color);
-   //printf("Greedy coloring found solution with %d colors\n", CountColors(V, color));
-   //printf("Valid coloring: %d\n", IsValidColoring(graph, V, color));
-   PrintSolution(color, V);
+   
+   //PrintSolution(color, V);
    
    return 0;
 }
