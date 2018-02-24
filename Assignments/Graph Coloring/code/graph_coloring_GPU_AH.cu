@@ -42,7 +42,7 @@ int main(int argc, char* argv[]){
 
    bool* graph;
    int V;     
-   const uint32_t blockingSize = 3;//TODO
+   const uint32_t blockingSize = 2;//TODO
    uint32_t numNNZ=0;
    uint32_t NumRow=0; 
    uint32_t numNNZ_blocked = 0;
@@ -60,11 +60,11 @@ int main(int argc, char* argv[]){
    /***********************************************************************/  
 
    //2) Allocate memory (on both sides)
-   uint32_t *col_id(NULL),*offset(NULL);
+   uint32_t *col_id(NULL),*offset(NULL);   
+
    HANDLE_ERROR(cudaMallocManaged(&col_id, numNNZ_blocked*sizeof(uint32_t)));   
    HANDLE_ERROR(cudaMallocManaged(&offset, (NumRow +1)*sizeof(uint32_t)));   
 
-   
 
    unsigned char* color;
    HANDLE_ERROR(cudaMallocManaged(&color, NumRow*sizeof(unsigned char)));   
@@ -75,14 +75,14 @@ int main(int argc, char* argv[]){
    HANDLE_ERROR(cudaMallocManaged(&numberVerticesPerColor, NumRow*sizeof(uint32_t)));
    memset(numberVerticesPerColor, 0, NumRow);   
    /***********************************************************************/
-   std::cout<<" NumRow+ 1= "<<NumRow+1<<std::endl;
-
+   
 
    //3) Get graph in CSR format 
    //getCSR(numNNZ, NumRow, graph, col_id, offset);   
    uint32_t maxLeftout=0; //maxLeftout the maximum number of vertices j connected to i that are left out when constructing blocked CSR (used to allocate conflicting graph)
    getBlockedCSR(NumRow, graph, col_id, offset, blockingSize, maxLeftout);   
    //printCSR(numNNZ_blocked,NumRow,col_id, offset);   
+   //exit(0);
    //getLowTrCSR(numNNZ, NumRow, graph, lowTr_col, lowTr_offset);
    //printCSR(numNNZ/2, NumRow, lowTr_col, lowTr_offset);
    /***********************************************************************/
@@ -103,18 +103,23 @@ int main(int argc, char* argv[]){
 
 
    //A) Do local colring 
-   uint32_t max_NNZ_per_block= maxNNZ_per_segment(offset, NumRow, blockingSize);      
-   uint32_t shrd_mem = numThreads*sizeof(bool) + max_NNZ_per_block*numThreads*sizeof(uint32_t);
-   shrd_mem *= 2;
-   coloring <<<numBlocks, numThreads, shrd_mem>>> (NumRow, col_id, offset, color, numColor,numberVerticesPerColor);
+   uint32_t max_NNZ_per_block= maxNNZ_per_segment(offset, NumRow, blockingSize);        
+   uint32_t shrd_mem = numThreads*sizeof(bool) + max_NNZ_per_block*sizeof(uint32_t);  
+   coloring <<<numBlocks, numThreads, shrd_mem>>> (NumRow, col_id, offset, color, numColor,numberVerticesPerColor, max_NNZ_per_block);
    cudaDeviceSynchronize();     
+
    HANDLE_ERROR(cudaFree(offset));//free what you dont need 
    HANDLE_ERROR(cudaFree(col_id));
 
 
+   /*printf("Parallel LOCAL solution has %d colors\n", CountColors(V, color));
+   printf("Valid LOCAL coloring: %d\n\n", IsValidColoring_Blocked(graph, V, color, blockingSize));  
+   PrintSolution(color,V);
+   exit(0);*/
+   
    //B) Get conflicting graph
    uint32_t *conflict_vertices(NULL), *conflict_offset(NULL);   
-   HANDLE_ERROR(cudaMallocManaged(&conflict_offset, ((*numColor) +1)*sizeof(uint32_t)));
+   HANDLE_ERROR(cudaMallocManaged(&conflict_offset, ((*numColor) +2)*sizeof(uint32_t)));
    HANDLE_ERROR(cudaMallocManaged(&conflict_vertices, NumRow*sizeof(uint32_t)));   
    HANDLE_ERROR(cub::DeviceScan::ExclusiveSum(d_temp_storage,temp_storage_bytes, numberVerticesPerColor,conflict_offset, (*numColor)+2));
    HANDLE_ERROR(g_allocator.DeviceAllocate(&d_temp_storage, temp_storage_bytes));   
@@ -124,6 +129,10 @@ int main(int argc, char* argv[]){
    uint32_t items_in_sh_mem = min(40*1024, NumRow);//same as bytes of sh mem since colors are unisgned char 
    conflict_graph<<< 1, (*numColor), items_in_sh_mem>>> (NumRow, color, numColor,conflict_vertices, conflict_offset, items_in_sh_mem);   
    cudaDeviceSynchronize();     
+
+
+
+
 
    //C) Resolving conflict 
    uint32_t *lowTr_col(NULL), *lowTr_offset(NULL);
@@ -146,28 +155,30 @@ int main(int argc, char* argv[]){
    //exit(0);   
 
    printf("\n*********************************\n");
-   int* colorInt;
-   HANDLE_ERROR(cudaMallocManaged(&colorInt, NumRow*sizeof(int)));   
-   memset(colorInt, 0, NumRow);   
+   //int* colorInt;
+   //HANDLE_ERROR(cudaMallocManaged(&colorInt, NumRow*sizeof(int)));   
+   //memset(colorInt, 0, NumRow);   
 
    //6) Validate parallel solution 
    printf("Parallel solution has %d colors\n", CountColors(V, color));
    printf("Valid coloring: %d\n\n", IsValidColoring(graph, V, color));
-   PrintSolution(color,V);
+   //PrintSolution(color,V);
    /***********************************************************************/
 
-   printf("\n*********************************\n");
+    //GreedyColoring(graph, V, &color);
+   //printf("\n*********************************\n");
+   //printf("Greedy solution has %d colors\n", CountColors(V, colorInt));
+   //printf("Valid coloring: %d\n\n", IsValidColoring(graph, V, colorInt));
+   //PrintSolution(colorInt,V);
 
+
+   //printf("\n*********************************\n");
    //7) Color Vertices on CPU
-   GraphColoring(graph, V, &colorInt);
-   printf("Brute-foce solution has %d colors\n", CountColors(V, colorInt));   
-   printf("Valid coloring: %d\n", IsValidColoring(graph, V, colorInt));
+   //GraphColoring(graph, V, &colorInt);
+   //printf("Brute-foce solution has %d colors\n", CountColors(V, colorInt));   
+   //printf("Valid coloring: %d\n", IsValidColoring(graph, V, colorInt));
 
-   //GreedyColoring(graph, V, &color);
-   printf("\n*********************************\n");
-   printf("Greedy solution has %d colors\n", CountColors(V, colorInt));
-   printf("Valid coloring: %d\n\n", IsValidColoring(graph, V, colorInt));
-   PrintSolution(colorInt,V);
+  
    /***********************************************************************/
 
 
