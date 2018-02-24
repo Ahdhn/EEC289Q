@@ -133,7 +133,7 @@ int main(int argc, char* argv[]){
 
    int newNumColor = (*numColor);
    for(int i=1; i <= (*numColor); i++){
-      newNumColor = conflict_resolve_forgetabout_sharedmemory1(conflict_vertices, conflict_offset, lowTr_col, lowTr_offset, NumRow, numNNZ/2, newNumColor, color, i);
+      newNumColor = conflict_resolve_forgetabout_sharedmemory1(conflict_vertices, conflict_offset, lowTr_col, lowTr_offset, NumRow, numNNZ/2, newNumColor, color, i, numBlocks, numThreads);
    }
 
    cudaDeviceSynchronize();
