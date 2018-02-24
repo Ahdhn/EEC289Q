@@ -13,7 +13,7 @@ void cuda_query(const int dev){
 	cudaSetDevice(dev);
 	cudaDeviceProp devProp;
 
-	HANDLE_ERROR(cudaGetDeviceProperties(&devProp, dev));
+	/*HANDLE_ERROR(cudaGetDeviceProperties(&devProp, dev));
 	printf("\n  Total number of device: %d", deviceCount);
 	printf("\n  Using device Number: %d", dev);
 	printf("\n  Device name: %s", devProp.name);
@@ -41,5 +41,5 @@ void cuda_query(const int dev){
 	printf("\n  Memory Clock Rate: %d(kHz)", devProp.memoryClockRate);
 	printf("\n  Memory Bus Width: %d(bits)", devProp.memoryBusWidth);
 	const double maxBW = 2.0 * devProp.memoryClockRate*(devProp.memoryBusWidth/8.0)/1.0E3;
-	printf("\n  Peak Memory Bandwidth: %f(MB/s)\n\n", maxBW);
+	printf("\n  Peak Memory Bandwidth: %f(MB/s)\n\n", maxBW);*/
 }
