@@ -38,16 +38,16 @@
 %\end{figure}
 
 \section{Algorithm Details:}
-Generally, there are two approach to do graph coloring: 1) independent set based 2) greedy algrithm based. In our work, we chose to use independent set based algorithm. Basically we generate each node a random number, and for each node, it can be added to the current independent set only if it has the maxinum random number among its neighbors. So this method ensure every node within the same independent set, they are not connected since they can not be maxinum at the same time. Next iteraion we find the maxinum vertex on nodes left (exclude nodes which are in the independent sets) and form a new indepedent set. The algorithm continues untill all the nodes belong to independent sets.
+Generally, there are two approach to do graph coloring: 1) independent set (IDS) based 2) greedy algrithm based. In our work, we chose to use independent set based algorithm. Basically we generate each node a random number, and for each node, it can be added to the current independent set only if it has the maxinum random number among its neighbors. So this method ensure every node within the same independent set, they are not connected since they can not be maxinum at the same time. Next iteraion we find the maxinum vertex on nodes left (exclude nodes which are in the independent sets) and form a new indepedent set. The algorithm continues untill all the nodes belong to independent sets.
 
 \subsection{An naive implementation}
 An naive implementation: 
 \begin{figure}[!tbh]
 \centering        
-   \subfloat[lol] {\includegraphics[width=0.24\textwidth]{naive.jpg}}
-   \subfloat[lol1] {\includegraphics[width=0.24\textwidth]{comfree.jpg}}
-   \subfloat[] {\includegraphics[width=0.24\textwidth]{confre.jpg}}
-   \subfloat[] {\includegraphics[width=0.24\textwidth]{scanlbswir.jpg}}
+   \subfloat[Overview of IDS based graph coloring] {\includegraphics[width=0.24\textwidth]{naive.jpg}}
+   \subfloat[Overview of communication free graph coloring] {\includegraphics[width=0.24\textwidth]{comfree.jpg}}
+   \subfloat[data structure of CF graph coloring ] {\includegraphics[width=0.24\textwidth]{confre.jpg}}
+   \subfloat[detail about CF load balancing] {\includegraphics[width=0.24\textwidth]{scanlbswir.jpg}}
    \caption{ }
    \label{fig:fig1}
 \end{figure}
@@ -59,7 +59,7 @@ So if at this iteration, a node is not included into an independent set, next it
 Now just think about how to use shared memroy, if we distributed nodes to different blocks, each node can load its neighbor list into shared memory and reuse it until it is added to an independent set. However, each iteration, the node also needs to know its neighbor's status (if added to IDS). If its neighbor belongs to other block, it is hard to keep data coherency among blocks. 
 
 \subsection{Communication free graph coloring}
-We propose this communication free graph coloring approach:
+We propose this communication free (CF) graph coloring approach:
 \begin{figure}[!tbh]
 \centering        
    \subfloat {\includegraphics[width=0.3\textwidth]{comfree.jpg}}
