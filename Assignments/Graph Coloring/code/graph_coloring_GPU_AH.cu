@@ -145,6 +145,30 @@ int main(int argc, char* argv[]){
    HANDLE_ERROR(cudaMallocManaged(&lowTr_offset, (NumRow+1)*sizeof(uint32_t)));
    getLowTrCSR(numNNZ, NumRow, graph, lowTr_col, lowTr_offset);
 
+//   for(int index=0; index<NumRow; index++)
+//   {
+//	if(graph[100*NumRow+index]!=0)
+//   	std::cout<<"graph[100*NumRow+"<<index<<"]:"<<graph[100*NumRow+index]<<" ";
+//   }
+//   for(int index=0; index<10; index++)
+//   {
+//   	int nodenow = lowTr_offset[index+1]-lowTr_offset[index];
+//	std::cout<<"index: "<<index<<std::endl;
+//   	for(int i=0; i<nodenow; i++)
+//   	{
+//		std::cout<<i<<":"<<lowTr_col[lowTr_offset[index]+i]<<"  ";
+//   	}
+//   	std::cout<<std::endl;
+//   }
+
+
+//   int node149Len = lowTr_offset[149+1]-lowTr_offset[149];
+//   for(int i=0; i<node149Len; i++)
+//   {
+//	std::cout<<i<<":"<<lowTr_col[lowTr_offset[149]+i]<<"  ";
+//   }
+//   std::cout<<std::endl;
+
    int newNumColor = (*numColor);
    for(int i=1; i <= (*numColor); i++){
       newNumColor = conflict_resolve_forgetabout_sharedmemory1(conflict_vertices, conflict_offset, lowTr_col, lowTr_offset, NumRow, numNNZ/2, newNumColor, color, i, numBlocks, numThreads);

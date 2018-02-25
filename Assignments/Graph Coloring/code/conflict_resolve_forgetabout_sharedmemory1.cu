@@ -34,8 +34,12 @@ void FindChangeColor(uint32_t *changeColor, uint32_t sizeNode, uint32_t *nodes, 
 //			printf("theColor: %u\n", (unsigned char)theColor);
 //		}
 //			printf("\n");
-//			printf("thread %d, my neighbor is %d, neighborOwner is %d, \n", i, neighbor, neighborOwner);
+//		if(i==0)
+//		printf("theColor: %u\n", (unsigned char)theColor);
+//		if(i>=0 && i<=20) {
+//			printf("thread %d, lbs[%d] is %d, wir[%d] is %d, nodes[lbs[%d]] is %d, my neighbor is %d, neighborOwner is %d, \n", i, i, lbs[i],i, wir[i], i, nodes[lbs[i]], neighbor, neighborOwner);
 //			printf("thread %d, nodes[%d] is %d and color[%d] is %u\n", i, neighborOwner, nodes[neighborOwner], neighbor, color[neighbor]);
+//		}
 		
 		if(color[neighbor] == (unsigned char)theColor)
 		{
@@ -128,6 +132,7 @@ int conflict_resolve_forgetabout_sharedmemory1(uint32_t* conflict_color, // Arra
 //		std::cout<<"nodes["<<i<<"]= "<<nodes[i]<<"  ";
 //	}
 //	std::cout<<std::endl;
+//	std::cout<<std::endl;
 
 	GetneighLen<<<gridSize, blockSize>>>(nodes, sizeNode,  tr_offset, neighLen1, changeColor);
 	cudaDeviceSynchronize();
@@ -160,6 +165,7 @@ int conflict_resolve_forgetabout_sharedmemory1(uint32_t* conflict_color, // Arra
 //			std::cout<<"neighLen["<<i<<"]= "<<neighLen[i]<<"  ";
 //		}
 //		std::cout<<std::endl;
+//		std::cout<<std::endl;
 
 		DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, neighLen, scanArray, sizeNode+1);			
 		cudaDeviceSynchronize();
@@ -167,6 +173,7 @@ int conflict_resolve_forgetabout_sharedmemory1(uint32_t* conflict_color, // Arra
 //		{
 //			std::cout<<"scan_neighLen["<<i<<"]= "<<scanArray[i]<<"   ";
 //		}
+//		std::cout<<std::endl;
 //		std::cout<<std::endl;
 		
 		int sizeLbs = scanArray[sizeNode];
@@ -183,6 +190,7 @@ int conflict_resolve_forgetabout_sharedmemory1(uint32_t* conflict_color, // Arra
 //			std::cout<<"lbs["<<i<<"]= "<<lbs[i]<<"   ";
 //		}
 //		std::cout<<std::endl;
+//		std::cout<<std::endl;
 		
 		WorkItemRank<<<gridSize,blockSize>>>(scanArray, lbs, wir, sizeLbs);		
 		cudaDeviceSynchronize();
@@ -190,6 +198,7 @@ int conflict_resolve_forgetabout_sharedmemory1(uint32_t* conflict_color, // Arra
 //		{
 //			std::cout<<"WIR["<<i<<"]= "<<wir[i]<<"   ";
 //                }
+//		std::cout<<std::endl;
 //		std::cout<<std::endl;
 		
                 FindChangeColor<<<gridSize,blockSize>>>(changeColor, sizeNode, nodes, wir, lbs, sizeLbs, tr_col_id, tr_offset, theColor, color);
@@ -204,6 +213,7 @@ int conflict_resolve_forgetabout_sharedmemory1(uint32_t* conflict_color, // Arra
 //			 printf("color[%d]=%u  ", i, color[i]);
 //		}
 //		std::cout<<std::endl;
+//		std::cout<<std::endl;
 
 		DeviceScan::ExclusiveSum(d_temp_storage, temp_storage_bytes, changeColor, scanArray, sizeNode+1);	
 		cudaDeviceSynchronize();
@@ -213,13 +223,15 @@ int conflict_resolve_forgetabout_sharedmemory1(uint32_t* conflict_color, // Arra
 //			std::cout<<"changeColor["<<i<<"]= "<<changeColor[i]<<"  ";
 //		}
 //		std::cout<<std::endl;	
-//		
+//		std::cout<<std::endl;
+		
 //		for(int i=0; i<sizeNode+1; i++)
 //		{
 //			std::cout<<"scan_changeColor["<<i<<"]= "<<scanArray[i]<<"   ";
 //		}
 //		std::cout<<std::endl;
-//
+//		std::cout<<std::endl;
+
 		choseL = choseL^1;
 		if(choseL == 1)
 		{
@@ -240,18 +252,20 @@ int conflict_resolve_forgetabout_sharedmemory1(uint32_t* conflict_color, // Arra
 		cudaDeviceSynchronize();
 		if(sizeNode == 0) break;
 
-//		printf("new sizeNode: %d\n", sizeNode);
+		printf("new sizeNode: %d\n", sizeNode);
 		nodes = newNodes;
-//		for(int i=0; i<sizeNode; i++)
-//		{
-//			std::cout<<"newNode["<<i<<"]=  "<<nodes[i]<<"   ";
-//		}
-//		std::cout<<std::endl;
+		for(int i=0; i<sizeNode; i++)
+		{
+			std::cout<<"newNode["<<i<<"]=  "<<nodes[i]<<"   ";
+		}
+		std::cout<<std::endl;
+		std::cout<<std::endl;
 		neighLen = newNeighLen;
 //		for(int i=0; i<sizeNode; i++)
 //		{
 //			std::cout<<"newNeighLen["<<i<<"]=  "<<neighLen[i]<<"   ";
 //		}
+//		std::cout<<std::endl;
 //		std::cout<<std::endl;
 //		std::cout<<"counter: "<<counter<<std::endl;
 		counter++;
