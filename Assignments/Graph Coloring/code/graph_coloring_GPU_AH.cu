@@ -31,7 +31,7 @@ static void HandleError(cudaError_t err, const char *file, int line) {
 
 int main(int argc, char* argv[]){
 
-   cuda_query(0); //Set the deivde number here 
+   cuda_query(3); //Set the deivde number here 
 
    if(argc != 2){
       std::cout<<"  Usage ./graphGPU INPUTFILE"<<std::endl;
@@ -42,7 +42,7 @@ int main(int argc, char* argv[]){
 
    bool* graph;
    int V;     
-   const uint32_t blockingSize = 50;//TODO
+   const uint32_t blockingSize = 100;//TODO
    uint32_t numNNZ=0;
    uint32_t NumRow=0; 
    uint32_t numNNZ_blocked = 0;
@@ -108,7 +108,7 @@ int main(int argc, char* argv[]){
    //A) Do local colring 
    uint32_t max_NNZ_per_block= maxNNZ_per_segment(offset, NumRow, blockingSize);        
    uint32_t shrd_mem = numThreads*sizeof(bool) /*+ max_NNZ_per_block*sizeof(uint32_t)*/;  
-   //std::cout<<"NumRow= "<<NumRow <<"   max_NNZ_per_block= "<<max_NNZ_per_block << " shrd_mem= "<<shrd_mem  << std::endl;
+   std::cout<<"NumRow= "<<NumRow <<"   max_NNZ_per_block= "<<max_NNZ_per_block << " shrd_mem= "<<shrd_mem  << std::endl;
    std::cout<<" numThreads= "<<numThreads<< " numBlocks= "<< numBlocks<<std::endl;
    coloring <<<numBlocks, numThreads, shrd_mem>>> (NumRow, col_id, offset, color, numColor,numberVerticesPerColor, max_NNZ_per_block);
    cudaDeviceSynchronize();     

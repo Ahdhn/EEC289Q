@@ -10,8 +10,8 @@ void cuda_query(const int dev){
 
 	//const int dev = (deviceCount == 1) ? 0 : 3;
 
-	/*cudaSetDevice(dev);
-	cudaDeviceProp devProp;
+	cudaSetDevice(dev);
+	/*cudaDeviceProp devProp;
 
 	HANDLE_ERROR(cudaGetDeviceProperties(&devProp, dev));
 	printf("\n  Total number of device: %d", deviceCount);
