@@ -124,27 +124,27 @@ Here we show some results of our implementation. Table ~\ref{tab:results} shows 
      
      \hhline{|=||=||=|=|}
  \hline
- le450\_5d.col &450       &   &18 \\
+ le450\_5d.col &450       & 58  &18 \\
  \hline
- myciel4.col &  23       &   &5 \\
+ myciel4.col &  23       & 8  &5 \\
  \hline
-  mygraph.col & 12       &  &3 \\
+  planar16.col &16        & 7  &5 \\
  \hline
-  planar16.col &16        &   &5 \\
+  planar36864.col & 36864     & 19  &7 \\
  \hline
-  planar36864.col & 36864     &   &7 \\
+   planar40.col &  40      & 9  & 5\\
  \hline
-   planar40.col &  40      &   & 5\\
+   planar43264.col & 43264     &  20 & 7\\
  \hline
-   planar43264.col & 43264     &   & 7\\
- \hline
-   qg.order100.col & 10000     &  &128 \\
+   qg.order100.col & 10000     & failed &128 \\
  \hline
  
 \end{tabular} 
 \caption{Results and comparsion of our implementation against CPU greedy algorithm.}
    \label{tab:results}
 \end{figure} 
+
+Because of the algorithm, the test run on qg.order100.col will use more than 256 colors. However, we use array of unsigned char to record the colors. So our algorihtm failed on this test case.
 
 
 \end{document}
