@@ -108,7 +108,7 @@ int conflict_resolve_forgetabout_sharedmemory1(uint32_t* conflict_color, // Arra
 		      int gridSize,
 		      int blockSize ) // working space and the size of this array shoudl be BLOCK_THREADS*ITEM_PER_THREAD, o,w it overwrittern information
 {
-        standard_context_t context(0,0);
+        standard_context_t context;
 	uint32_t *nodes(NULL), *changeColor(NULL), *nodes1(NULL), *nodes2(NULL), *neighLen1(NULL), *neighLen2(NULL),  *neighLen(NULL);
 	uint32_t *newNodes(NULL), *newNeighLen(NULL);
 	int start = conflict_color_offset[colorID];
@@ -272,7 +272,7 @@ int conflict_resolve_forgetabout_sharedmemory1(uint32_t* conflict_color, // Arra
 //		std::cout<<std::endl;
 //		std::cout<<std::endl;
 	}	
-	//std::cout<<counter-1<<" color is added, total number of color is "<<theColor-1<<std::endl;
+	std::cout<<counter-1<<" color is added, total number of color is "<<theColor-1<<std::endl;
 	cudaFree(nodes1);
 	cudaFree(nodes2);
 	cudaFree(neighLen1);
