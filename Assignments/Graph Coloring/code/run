@@ -1,0 +1,1 @@
+nvcc -std=c++11 -I/home/yuxin420/moderngpu/src --expt-extended-lambda -I/home/yuxin420/cub -lcudart  -arch=sm_35 graph_coloring_GPU_AH.cu -o  graphGPU
