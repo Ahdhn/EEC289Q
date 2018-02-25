@@ -1,7 +1,7 @@
 // Read MatrixMarket graphs
 // Assumes input nodes are numbered starting from 1
 void ReadMMFile(const char filename[], bool** graph, int* V, uint32_t*numNNZ, uint32_t*NumRow,
-                const uint32_t blockingSize,uint32_t*numNNZ_blocked)
+                uint32_t&blockingSize,uint32_t*numNNZ_blocked)
 {
    using namespace std;
    string line;
@@ -35,6 +35,17 @@ void ReadMMFile(const char filename[], bool** graph, int* V, uint32_t*numNNZ, ui
 
    memset(*graph, 0, (*NumRow) * (*NumRow) * sizeof(bool));
    *V = (*NumRow);
+   if((*V) < 32){ //if it is small graph 
+    blockingSize = min(5,(*V));
+   }else {      
+      blockingSize = max((*V) / 1024,1); 
+      blockingSize*=32;
+      if(blockingSize > 1024){
+        blockingSize = 1024;
+      }
+   }
+
+  
 
    // Reading nodes
    while (getline(infile, line)) {
@@ -71,7 +82,7 @@ void ReadMMFile(const char filename[], bool** graph, int* V, uint32_t*numNNZ, ui
 // Read DIMACS graphs
 // Assumes input node s are numbered starting from 1
 void ReadColFile(const char filename[], bool** graph, int* V, uint32_t*numNNZ, uint32_t*NumRow,
-                 const uint32_t blockingSize,uint32_t*numNNZ_blocked)
+                 uint32_t&blockingSize,uint32_t*numNNZ_blocked)
 {
    using namespace std;
    string line;
@@ -94,6 +105,15 @@ void ReadColFile(const char filename[], bool** graph, int* V, uint32_t*numNNZ, u
          iss >> (*NumRow);
          iss >> num_edges;
          *V = (*NumRow);
+         if((*V) < 32){ //if it is small graph 
+         blockingSize = min(5,(*V));
+         }else {
+          blockingSize = max((*V) / 1024,1); 
+          blockingSize*=32;
+          if(blockingSize > 1024){
+              blockingSize = 1024;
+          }
+         }
          *graph = new bool[(*NumRow) * (*NumRow)];
          memset(*graph, 0, (*NumRow) * (*NumRow) * sizeof(bool));
          for(int i = 0; i<(*NumRow) * (*NumRow);i++){
