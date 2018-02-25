@@ -29,13 +29,13 @@ __global__ void coloring(uint32_t NumRow, //number of vertices (= number of rows
 #pragma unroll 	
 	for(uint32_t i=0; i < NUM_COLOR_PER_THREAD; i++){ my_thd_colors[i]=0; }//initialize with no color 
 
-	//extern __shared__ bool shrd_ptr[];
-	//bool* sh_set = shrd_ptr;// the independent set of this block (has to be in shared memory because thread/vertex i needs to know if thread/vertex j is in the set or not when getting the independant set)
+	extern __shared__ bool shrd_ptr[];
+	bool* sh_set = shrd_ptr;// the independent set of this block (has to be in shared memory because thread/vertex i needs to know if thread/vertex j is in the set or not when getting the independant set)
 	//uint32_t * sh_col_id = (uint32_t*)&sh_set[blockDim.x]; 
 
-	extern __shared__ uint32_t shrd_ptr[];
+	/*extern __shared__ uint32_t shrd_ptr[];
 	uint32_t * sh_col_id = shrd_ptr;//(uint32_t*)&sh_set[blockDim.x]; 
-	bool* sh_set = (bool*)&sh_col_id[max_NNZ_per_block];
+	bool* sh_set = (bool*)&sh_col_id[max_NNZ_per_block];*/
 	
 
 	//extern __shared__ uint32_t shrd_ptr2[];
@@ -55,16 +55,10 @@ __global__ void coloring(uint32_t NumRow, //number of vertices (= number of rows
 
 	const uint32_t tid = start_row + threadIdx.x;//equal to this thread's vertex id
 
-/*#pragma unroll 
-	for(uint32_t i= threadIdx.x; i + start_row < end_row ; i+=blockDim.x) {//make sure that we 		                                                               //don't go beyound offste []
-		my_offset_start = offset[i + start_row];
-		my_offset_end = offset[i + 1 + start_row];//hopefully this is cached 
-		//printf("\n i + start_row=%d,  i + 1 + start_row=%d \n", i + start_row, i + 1 + start_row);
-	}*/
-if(tid < NumRow){
-	my_offset_start = offset[ tid ];
-	my_offset_end = offset[tid +1];	
-}
+	if(tid < NumRow){
+		my_offset_start = offset[ tid ];
+		my_offset_end = offset[tid +1];	
+	}
 
 #pragma unroll 
 	for(uint32_t i= threadIdx.x; i< NUM_COLOR_PER_THREAD*blockDim.x; i+=blockDim.x){
@@ -74,30 +68,38 @@ if(tid < NumRow){
 
 	//count the number of nnz element owned by this block
 	//reduce within a block 
-	__shared__ uint32_t myNNZ; 
-	__shared__ uint32_t start_col_id;
+	__shared__ uint32_t block_myNNZ; 
+	__shared__ uint32_t block_start_col_id;
 
 
 	if(threadIdx.x == blockDim.x -1){
-		myNNZ = my_offset_end;
+		block_myNNZ = my_offset_end;
 	}
-	__syncthreads(); //make sure myNNZ is updated 
+	__syncthreads(); //make sure block_myNNZ is updated 
 	if(threadIdx.x == 0){
-		myNNZ -= my_offset_start;
-		start_col_id = my_offset_start;
+		block_myNNZ -= my_offset_start;
+		block_start_col_id = my_offset_start;
 	}
-	__syncthreads(); //make sure myNNZ is updated 
-	my_offset_start -= start_col_id; //decremented so that we can use them to index sh_col_id directly
-	my_offset_end -= start_col_id;
+	__syncthreads(); //make sure block_myNNZ is updated 
+	my_offset_start -= block_start_col_id; //decremented so that we can use them to index sh_col_id directly
+	my_offset_end -= block_start_col_id;
+
+	/*if(threadIdx.x == 0){
+		printf("\n block_myNNZ= %d\n",block_myNNZ);
+	}*/
+
 
 	//move the col_id (coalesced read)	
 
-	for(uint32_t i = threadIdx.x; i < myNNZ; i+=blockDim.x){			
-		sh_col_id[i] = col_id[start_col_id + i];
-		//printf("\n tid= %d, myNNZ= %d, start_col_id= %d, threadIdx.x= %d, i= %d\n", tid,     myNNZ,     start_col_id,     threadIdx.x,     i );		
+	/*for(uint32_t i = threadIdx.x; i < block_myNNZ; i+=blockDim.x){
 		
-	}
-	__syncthreads(); //make sure all col_id are loaded
+		sh_col_id[i] = col_id[block_start_col_id + i];
+
+		printf("\n tid= %d, blockIdx.x= %d, block_myNNZ= %d, block_start_col_id= %d, threadIdx.x= %d, i= %d, col_id[%d]= %d\n", tid, blockIdx.x, block_myNNZ, block_start_col_id, threadIdx.x, i,block_start_col_id + i,col_id[block_start_col_id + i]);		
+		
+	}*/
+	__syncthreads(); 
+	//return;
 
 	//*****************************************************//
 
@@ -105,7 +107,7 @@ if(tid < NumRow){
 
 	while(numColored < blockDim.x * NUM_COLOR_PER_THREAD){ //loop untill all this blocks vertices are colored		
 		numColored = 0;
-		indept_set(tid, my_offset_start, my_offset_end, start_row, end_row, sh_col_id, NumRow, numColored, 0, sh_set);
+		indept_set(tid, my_offset_start, my_offset_end, start_row, end_row, col_id, NumRow, numColored, 0, sh_set, block_start_col_id);
 		__syncthreads();			
 		assign_color(tid, currentColor, NumRow, sh_set, my_thd_colors, 0);		
 		__syncthreads();

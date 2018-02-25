@@ -9,8 +9,8 @@ void indept_set(const uint32_t tid,
                 const uint32_t NumRow,
                 int&numColored,
                 bool useMax,
-                bool*&sh_set
-                ){		 
+                bool*&sh_set,
+                uint32_t block_start_col_id){		 
 
 	if(tid < NumRow){//only if my vertex was not colored before
 
@@ -18,7 +18,7 @@ void indept_set(const uint32_t tid,
 
 		for(uint32_t i = my_offset_start; i < my_offset_end; i++){//read inside the shared col id
 			//avoid thread diveregnce by arthematics 				
-			uint32_t j = sh_col_id[i];
+			uint32_t j = sh_col_id[i+block_start_col_id];
 			if(useMax){
 				//my vertex is in the independent set if it is the "maximum" of its neighbours
 				inSet = inSet && (j < start_row || j >= end_row || //j not in this blocks processed vertices
