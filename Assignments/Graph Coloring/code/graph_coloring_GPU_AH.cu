@@ -130,7 +130,7 @@ void GraphColoringGPU(const char filename[], int**&color_int)
     //5.5) Validate parallel LOCAL solution    
    //printf("Parallel LOCAL solution has %d colors\n", CountColors(V, color));
    //printf("Valid LOCAL coloring: %d\n\n", IsValidColoring_Blocked(graph, V, color, blockingSize));  
-   PrintSolution(color,V);  
+   //PrintSolution(color,V);  
    //exit(0);   
 
    //6) Validate parallel solution 
