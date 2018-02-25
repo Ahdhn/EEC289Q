@@ -258,7 +258,7 @@ int conflict_resolve_forgetabout_sharedmemory1(uint32_t* conflict_color, // Arra
 //		std::cout<<std::endl;
 //		std::cout<<std::endl;
 	}	
-	std::cout<<counter-1<<" color is added, total number of color is "<<theColor-1<<std::endl;
+	//std::cout<<counter-1<<" color is added, total number of color is "<<theColor-1<<std::endl;
 	cudaFree(nodes1);
 	cudaFree(nodes2);
 	cudaFree(neighLen1);
