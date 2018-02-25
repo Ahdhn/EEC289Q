@@ -3,18 +3,19 @@ void assign_color(const uint32_t set_id,
                   const  unsigned char currentColor, 
                   const uint32_t NumRow,  
                   bool*sh_set, 
-                  unsigned char my_thd_colors[], 
+                  //unsigned char my_thd_colors[], 
+                  unsigned char&my_thd_colors, 
                   uint32_t color_id){
 
 	//Assigne color k to vertices marked as true in set array
 	if(set_id < NumRow){		
-		//if(threadIdx.x == 0){
-		//	printf("\n currentColor=%u, my_thd_colors[%d]= %d, sh_set[%d]=%d\n", 
-		//		       currentColor, color_id, my_thd_colors[color_id],set_id ,sh_set[set_id]);
-		//}
-		my_thd_colors[color_id] = my_thd_colors[color_id] + (my_thd_colors[color_id]==0)*
-		                                                    currentColor*
-		                                                    sh_set[set_id];
+		//my_thd_colors[color_id] = my_thd_colors[color_id] + (my_thd_colors[color_id]==0)*currentColor*sh_set[set_id];	
+
+		my_thd_colors += (my_thd_colors==0)*currentColor*sh_set[threadIdx.x];
+
+		/*if(blockIdx.x == 0){
+			printf("\n AFTER threadIdx.x= %d, my_thd_colors= %u, currentColor= %u, sh_set[%d]= %d\n", threadIdx.x, my_thd_colors, currentColor, threadIdx.x, sh_set[threadIdx.x]);
+		}*/
         
 	}
 }

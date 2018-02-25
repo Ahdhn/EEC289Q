@@ -18,32 +18,34 @@ void indept_set(const uint32_t tid,
 
 		for(uint32_t i = my_offset_start; i < my_offset_end; i++){//read inside the shared col id
 			//avoid thread diveregnce by arthematics 				
-			uint32_t j = sh_col_id[i+block_start_col_id];
+			//uint32_t j = sh_col_id[i+block_start_col_id];
+			uint32_t j = sh_col_id[i];
 			if(useMax){
 				//my vertex is in the independent set if it is the "maximum" of its neighbours
-				inSet = inSet && (j < start_row || j >= end_row || //j not in this blocks processed vertices
+				inSet = inSet && (//j < start_row || j >= end_row || //j not in this blocks processed vertices
 					              tid < j ||//if j id (or rand num) is greater than i, ignore               
-					              sh_set[j]    //if j is been already in the set, ignore
+					              sh_set[j-start_row]    //if j is been already in the set, ignore
 					              );
 
 				              
 			}else{				
 				//my vertex is in the independent set if it is the "minimum" of its neighbours				
-				inSet = inSet && (j < start_row || j >= end_row || //j not in this blocks processed vertices
+				inSet = inSet && (//j < start_row || j >= end_row || //j not in this blocks processed vertices
 					              tid > j ||//if j id (or rand num) is less than i, ignore               
-					              sh_set[j]  //if j is been already in the set, ignore
+					              sh_set[j-start_row]  //if j is been already in the set, ignore
 					              );
-				/*if(tid == 0){
-					printf("\n inSet= %d, i= %d, j= %d, (j<start_row||j>=end_row)= %d, (tid>j)= %d\n",
-					           inSet, i, j, (j<start_row||j>=end_row), tid > j);
+				/*if(blockIdx.x == 1){
+					printf("\n tid= %d, inSet= %d, i= %d, j= %d, (tid>j)= %d, start_row= %d, sh_set[%d]= %d\n",
+					           tid,     inSet,     i,     j,      tid>j,      start_row,           j-start_row, sh_set[j-start_row]);
 				}*/
 			}
 		}
 		//__syncthreads();
 
-		sh_set[tid] = inSet;
+		//sh_set[tid] = inSet;
+		sh_set[threadIdx.x] = inSet;
 
-		if(sh_set[tid]){
+		if(sh_set[threadIdx.x]){
 			atomicAdd(&numColored, 1);//if it is in the independent set, then it will be colored
 		}
 
@@ -51,7 +53,7 @@ void indept_set(const uint32_t tid,
 		/*__syncthreads();
 		if(threadIdx.x == 0 && blockIdx.x == 0) {
 			printf("\n The ind set is: \n");
-			for(int i=0; i<NumRow; i++){
+			for(int i=0; i<end_row - start_row; i++){
 				if(sh_set[i]){
 					printf(" %d ", i );
 				}

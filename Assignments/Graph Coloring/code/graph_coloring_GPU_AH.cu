@@ -42,7 +42,7 @@ int main(int argc, char* argv[]){
 
    bool* graph;
    int V;     
-   const uint32_t blockingSize = 200;//TODO
+   const uint32_t blockingSize = 50;//TODO
    uint32_t numNNZ=0;
    uint32_t NumRow=0; 
    uint32_t numNNZ_blocked = 0;
@@ -71,6 +71,7 @@ int main(int argc, char* argv[]){
    memset(color, 0, NumRow);   
    int*numColor;
    HANDLE_ERROR(cudaMallocManaged(&numColor, sizeof(int)));
+   memset(numColor, 0, 1);   
    uint32_t*numberVerticesPerColor;//allocate as if each vertex will take different color 
    HANDLE_ERROR(cudaMallocManaged(&numberVerticesPerColor, NumRow*sizeof(uint32_t)));
    memset(numberVerticesPerColor, 0, NumRow);   
@@ -92,21 +93,23 @@ int main(int argc, char* argv[]){
    size_t temp_storage_bytes = 0;
    cub::CachingDeviceAllocator  g_allocator(true);
 
-    int numBlocks(1), numThreads(1);
-   if(NumRow < 1024){//if it is less than NumRow vertex, then launch one block 
+   int numBlocks(1), numThreads(1);
+   numBlocks = (NumRow/blockingSize) + 1;
+   numThreads = blockingSize;
+   /*if(blockingSize < 1024){//if it is less than NumRow vertex, then launch one block 
       numBlocks = 1;
-      numThreads = NumRow;
+      numThreads = blockingSize;
    }else{//otherwise, launch as many as 1024-blocks as you need      
-      numBlocks = (NumRow/1024) + 1;
+      numBlocks = (blockingSize/1024) + 1;
       numThreads = 1024;
-   }
+   }*/
 
 
    //A) Do local colring 
    uint32_t max_NNZ_per_block= maxNNZ_per_segment(offset, NumRow, blockingSize);        
    uint32_t shrd_mem = numThreads*sizeof(bool) /*+ max_NNZ_per_block*sizeof(uint32_t)*/;  
    //std::cout<<"NumRow= "<<NumRow <<"   max_NNZ_per_block= "<<max_NNZ_per_block << " shrd_mem= "<<shrd_mem  << std::endl;
-   //std::cout<<" numThreads= "<<numThreads<< " numBlocks= "<< numBlocks<<std::endl;
+   std::cout<<" numThreads= "<<numThreads<< " numBlocks= "<< numBlocks<<std::endl;
    coloring <<<numBlocks, numThreads, shrd_mem>>> (NumRow, col_id, offset, color, numColor,numberVerticesPerColor, max_NNZ_per_block);
    cudaDeviceSynchronize();     
 
@@ -116,7 +119,7 @@ int main(int argc, char* argv[]){
 
    /*printf("Parallel LOCAL solution has %d colors\n", CountColors(V, color));
    printf("Valid LOCAL coloring: %d\n\n", IsValidColoring_Blocked(graph, V, color, blockingSize));  
-   PrintSolution(color,V);
+   //PrintSolution(color,V);
    exit(0);*/
    
    //B) Get conflicting graph
