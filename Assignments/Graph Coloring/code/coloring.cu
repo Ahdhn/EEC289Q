@@ -116,7 +116,7 @@ __global__ void coloring(uint32_t NumRow, //number of vertices (= number of rows
 	while(numColored < end_row- start_row){ //loop untill all this blocks vertices are colored		
 		numColored = 0;
 		__syncthreads();			
-		indept_set(tid, my_offset_start, my_offset_end, start_row, end_row, col_id, NumRow, numColored, 0, sh_set, block_start_col_id);
+		indept_set(tid, my_offset_start, my_offset_end, start_row, end_row, col_id, NumRow, numColored, /*currentColor%2==*/0, sh_set, block_start_col_id);
 		__syncthreads();			
 		assign_color(tid, currentColor, NumRow, sh_set, my_thd_colors, 0);		
 		__syncthreads();
