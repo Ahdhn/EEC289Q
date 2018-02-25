@@ -42,7 +42,7 @@ int main(int argc, char* argv[]){
 
    bool* graph;
    int V;     
-   const uint32_t blockingSize = 20;//TODO
+   const uint32_t blockingSize = 200;//TODO
    uint32_t numNNZ=0;
    uint32_t NumRow=0; 
    uint32_t numNNZ_blocked = 0;
@@ -81,7 +81,7 @@ int main(int argc, char* argv[]){
    //getCSR(numNNZ, NumRow, graph, col_id, offset);   
    uint32_t maxLeftout=0; //maxLeftout the maximum number of vertices j connected to i that are left out when constructing blocked CSR (used to allocate conflicting graph)
    getBlockedCSR(NumRow, graph, col_id, offset, blockingSize, maxLeftout);   
-   printCSR(numNNZ_blocked,NumRow,col_id, offset);   
+   //printCSR(numNNZ_blocked,NumRow,col_id, offset);   
    //exit(0);
    //getLowTrCSR(numNNZ, NumRow, graph, lowTr_col, lowTr_offset);
    //printCSR(numNNZ/2, NumRow, lowTr_col, lowTr_offset);
@@ -104,9 +104,9 @@ int main(int argc, char* argv[]){
 
    //A) Do local colring 
    uint32_t max_NNZ_per_block= maxNNZ_per_segment(offset, NumRow, blockingSize);        
-   uint32_t shrd_mem = numThreads*sizeof(bool) + max_NNZ_per_block*sizeof(uint32_t);  
-   std::cout<<"NumRow= "<<NumRow <<"   max_NNZ_per_block= "<<max_NNZ_per_block << " shrd_mem= "<<shrd_mem  << std::endl;
-   std::cout<<" numThreads= "<<numThreads<< " numBlocks= "<< numBlocks<<std::endl;
+   uint32_t shrd_mem = numThreads*sizeof(bool) /*+ max_NNZ_per_block*sizeof(uint32_t)*/;  
+   //std::cout<<"NumRow= "<<NumRow <<"   max_NNZ_per_block= "<<max_NNZ_per_block << " shrd_mem= "<<shrd_mem  << std::endl;
+   //std::cout<<" numThreads= "<<numThreads<< " numBlocks= "<< numBlocks<<std::endl;
    coloring <<<numBlocks, numThreads, shrd_mem>>> (NumRow, col_id, offset, color, numColor,numberVerticesPerColor, max_NNZ_per_block);
    cudaDeviceSynchronize();     
 

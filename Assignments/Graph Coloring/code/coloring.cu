@@ -29,13 +29,13 @@ __global__ void coloring(uint32_t NumRow, //number of vertices (= number of rows
 #pragma unroll 	
 	for(uint32_t i=0; i < NUM_COLOR_PER_THREAD; i++){ my_thd_colors[i]=0; }//initialize with no color 
 
-	//extern __shared__ bool shrd_ptr[];
-	//bool* sh_set = shrd_ptr;// the independent set of this block (has to be in shared memory because thread/vertex i needs to know if thread/vertex j is in the set or not when getting the independant set)
+	extern __shared__ bool shrd_ptr[];
+	bool* sh_set = shrd_ptr;// the independent set of this block (has to be in shared memory because thread/vertex i needs to know if thread/vertex j is in the set or not when getting the independant set)
 	//uint32_t * sh_col_id = (uint32_t*)&sh_set[blockDim.x]; 
 
-	extern __shared__ uint32_t shrd_ptr[];
+	/*extern __shared__ uint32_t shrd_ptr[];
 	uint32_t * sh_col_id = shrd_ptr;//(uint32_t*)&sh_set[blockDim.x]; 
-	bool* sh_set = (bool*)&sh_col_id[max_NNZ_per_block];
+	bool* sh_set = (bool*)&sh_col_id[max_NNZ_per_block];*/
 	
 
 	//extern __shared__ uint32_t shrd_ptr2[];
@@ -84,9 +84,9 @@ __global__ void coloring(uint32_t NumRow, //number of vertices (= number of rows
 	my_offset_start -= block_start_col_id; //decremented so that we can use them to index sh_col_id directly
 	my_offset_end -= block_start_col_id;
 
-	if(threadIdx.x == 0){
+	/*if(threadIdx.x == 0){
 		printf("\n block_myNNZ= %d\n",block_myNNZ);
-	}
+	}*/
 
 
 	//move the col_id (coalesced read)	
