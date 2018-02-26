@@ -59,15 +59,23 @@ There has been a decent amount of work devoted to parallelize the computation DT
 
 
 
+\section*{Milestones}
+\begin{itemize}
+\item \textbf{Week 1 (26 February - 4 March):} Preparation of input point clouds, k-d tree for nearest neighbor search queries, initial implementation using one thread, and validation of our results.   
+\item \textbf{Week 2 (5 March - 11 March):}  Extending the one thread implementation to multiple blocks and multiple threads. 
+\item \textbf{Week 3 (12 March - 18 March):} Optimization of memory accesses and caching into shared memory. Comparing our results to parallel algorithms for 3D Delaunay/Voronoi meshing.   
+ 
+\end{itemize}
 
-\section*{Target}
+\section*{Deliverables}
 We promise, to the best of our capacity, the deliver the followings through this project
 \begin{itemize}
 \item Exploring and reporting the challenges of implementing the RSD algorithm in 3D
 \item Reporting our experience with solving these challenges 
 \item Valid and robust implementation of the RSD algorithm in 3D on the GPU using CUDA
-\item If available, comparing with other parallel algorithms for 3D Delaunay/Voronoi meshing to get a taste on where we stand 
+\item Comparing with a parallel algorithm for 3D Delaunay meshing~\citep{cao2014gpu} to get a taste on where we stand. 
 \end{itemize}
+
 
 
 \bibliography{mybib}
