@@ -1,4 +1,5 @@
 #include "spokes.cu"
+#include <stdint.h>
 
 __device__ __forceinline__ void Explore(int tid){
 

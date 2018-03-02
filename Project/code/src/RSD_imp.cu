@@ -1,13 +1,24 @@
 #include "spokes.cu"
 #include "propagate.cu"
 #include "explore.cu"
+#include <stdint.h>
 
-__global__ void RSD_Imp(real3* d_points, int* d_neighbors, int NPoints, int* d_delaunay){
+__global__ void RSD_Imp(real3* d_points, uint32_t* d_neighbors, int NPoints, uint32_t* d_delaunay, int MaxOffset){
 
 	int tid = threadIdx.x + blockIdx.x * blockDim.x;
 	
 	printf("I'm Thread No. %i\n", tid);
+	
 	printf("My Point is (%f,%f,%f). \n", d_points[tid].x, d_points[tid].y, d_points[tid].z);
+	
+	printf("My neighbors (%i):", d_neighbors[MaxOffset * tid]);
+	for (int iN = 1; iN <= d_neighbors[MaxOffset * tid]; iN++)
+	{
+		uint32_t myN = d_neighbors[MaxOffset * tid + iN];
+		printf(" %i", myN);
+	}
+	printf("\n.");
+
 	if (tid > NPoints) return;
 
 	Explore(tid); 

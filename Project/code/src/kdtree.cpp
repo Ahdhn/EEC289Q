@@ -55,7 +55,7 @@ void kdtree::bulkBuild(size_t start, size_t end, size_t iDim){
 	if (mid + 1 <= end)
 		bulkBuild(mid + 1, end, iDim + 1);
 }
-void kdtree::treePointsInsideSphere(size_t iPoint, real r, size_t*& inside, size_t& numInside, size_t idx){
+void kdtree::treePointsInsideSphere(size_t iPoint, real r, uint32_t* inside, uint32_t& numInside, size_t idx){
 	
 	size_t idim = idx % 3;
 
@@ -88,7 +88,7 @@ void kdtree::treePointsInsideSphere(size_t iPoint, real r, size_t*& inside, size
 	}
 
 }
-void kdtree::treePointsInsideSphereBF(size_t iPoint, real r, size_t*& inside, size_t& numInside){
+void kdtree::treePointsInsideSphereBF(size_t iPoint, real r, uint32_t*& inside, uint32_t& numInside){
 
 	for (size_t in = 0; in < numPoints; in++)
 	{

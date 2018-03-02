@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include "tree.cpp"
 #include "RSD_imp.cu"
+#include <stdint.h>
 
 //#include "spokes.cu"
 #include "kdtree.h"
@@ -121,10 +122,10 @@ void ReadPoints(std::string FileName, int&NumPoints, real3*&Points){
 }
 void TestTree(kdtree& tree, size_t NumPoints)
 {
-	size_t numInside0 = 0;
-	size_t numInside1 = 0;
-	size_t* inside0 = new size_t[1 << 14];
-	size_t* inside1 = new size_t[1 << 14];
+	uint32_t numInside0 = 0;
+	uint32_t numInside1 = 0;
+	uint32_t* inside0 = new uint32_t[1 << 14];
+	uint32_t* inside1 = new uint32_t[1 << 14];
 	for (size_t iPoint = 0; iPoint < 20; iPoint++)
 	{
 		real r = 0.1;
@@ -165,6 +166,23 @@ void TestTree(kdtree& tree, size_t NumPoints)
 	printf("All good!\n");
 
 }
+void BuildNeighbors(kdtree&tree, size_t NumPoints, uint32_t*& h_neighbors, size_t offset)
+{
+	h_neighbors = new uint32_t[NumPoints* offset];
+	memset(h_neighbors, 0, NumPoints* offset * sizeof(uint32_t));
+	real r = 0.4;
+	for (size_t iPoint = 0; iPoint < NumPoints; iPoint++)
+	{
+		size_t start = iPoint * offset;
+		h_neighbors[start] = 0;
+		tree.treePointsInsideSphere(iPoint, r, (&h_neighbors[start] + 1), h_neighbors[start]);
+		if (h_neighbors[start] > offset - 1)
+			printf("Error! in line %i.\n",__LINE__);
+	}
+
+
+}
+
 int main(int argc, char**argv){
 	//0) Generate the input points
 	PointsGen("../../data/tiny.txt", 100);
@@ -180,17 +198,24 @@ int main(int argc, char**argv){
 
 	//2) Build Data Structure
 	kdtree tree; 
+	uint32_t* h_neighbors;
+	int MaxOffset = 32;
 	tree.bulkBuild(Points, NumPoints);
+	BuildNeighbors(tree, NumPoints, h_neighbors, MaxOffset);
 	//TestTree(tree, NumPoints);
 	
 	//3) Move Data to GPU
-	real3* d_points = NULL; int* d_neighbors = NULL; int* d_delaunay = NULL;
+	real3* d_points = NULL; uint32_t* d_neighbors = NULL; uint32_t* d_delaunay = NULL;
 	cudaMalloc((void**)&d_points, NumPoints * sizeof(real3));
 	cudaMemcpy(d_points, Points, NumPoints * sizeof(real3), cudaMemcpyHostToDevice);
 	HANDLE_ERROR(cudaGetLastError());
 
+	cudaMalloc((void**)&d_neighbors, NumPoints * MaxOffset * sizeof(uint32_t));
+	cudaMemcpy(d_neighbors, h_neighbors, NumPoints * MaxOffset * sizeof(uint32_t), cudaMemcpyHostToDevice);
+	HANDLE_ERROR(cudaGetLastError());
+
 	//4) Launch kernels and record time
-	RSD_Imp << <1, 1 >> > (d_points, d_neighbors, NumPoints, d_delaunay);
+	RSD_Imp << <1, 1 >> > (d_points, d_neighbors, NumPoints, d_delaunay, MaxOffset);
 	HANDLE_ERROR(cudaGetLastError());
 	cudaDeviceSynchronize();
 
