@@ -15,9 +15,8 @@
 #include "tree.cpp"
 #include "RSD_imp.cu"
 #include "spokes.cu"
+#include "kdtree.h"
 
-
-typedef double real; //Change this between double or (float) single precision
 
 static void HandleError(cudaError_t err, const char *file, int line) {
 	//Error handling micro, wrap it around function whenever possible
@@ -102,7 +101,10 @@ void ReadPoints(std::string FileName, int&NumPoints, real**&Points){
 		std::cout << " Error:: Can not open "<<FileName << std::endl;
 		exit(EXIT_FAILURE);
 	}
-
+	
+//	std::fstream test("test.txt", std::ios::out);
+//	test << __FILE__;
+//	test.close();
 
 	NumPoints = 0;
 	file >> NumPoints;
@@ -116,10 +118,55 @@ void ReadPoints(std::string FileName, int&NumPoints, real**&Points){
 	file.close();
 	std::cout<<" NumPoints= "<<NumPoints<<std::endl;
 }
+void TestTree(kdtree& tree, size_t NumPoints)
+{
+	size_t numInside0 = 0;
+	size_t numInside1 = 0;
+	size_t* inside0 = new size_t[1 << 14];
+	size_t* inside1 = new size_t[1 << 14];
+	for (size_t iPoint = 0; iPoint < 20; iPoint++)
+	{
+		real r = 0.1;
 
+		numInside0 = 0;
+		tree.treePointsInsideSphere(iPoint, r, inside0, numInside0);
+		std::sort(inside0, inside0 + numInside0);
+
+
+		numInside1 = 0;
+		tree.treePointsInsideSphereBF(iPoint, r, inside1, numInside1);
+		std::sort(inside1, inside1 + numInside1);
+
+		if (numInside0 != numInside1)
+			printf("mismatch.\n");
+		for (size_t in = 0; in < numInside0; in++)
+		{
+			if (inside0[in] != inside1[in])
+				printf("mismatch.\n");
+		}
+		if (0)
+		{
+			for (size_t in = 0; in < numInside0; in++)
+				printf("%i, ", inside0[in]);
+
+			printf("point %i neighbors are (%i) : ", iPoint, numInside0);
+			for (size_t in = 0; in < numInside0; in++)
+				printf("%i, ", inside0[in]);
+			printf("\n");
+
+			printf("point %i neighbors are (%i) : ", iPoint, numInside1);
+			for (size_t in = 0; in < numInside1; in++)
+				printf("%i, ", inside1[in]);
+			printf("\n");
+		}
+	}
+
+	printf("All good!\n");
+
+}
 int main(int argc, char**argv){
 	//0) Generate the input points
-	//PointsGen("../data/tiny.txt", 10);
+	PointsGen("../../data/tiny.txt", 100000);
 
 
 	DeviceQuery();
@@ -127,11 +174,13 @@ int main(int argc, char**argv){
 	//1) Read input set of points
 	int NumPoints;
 	real ** Points=NULL;
-	ReadPoints("../data/tiny.txt",NumPoints, Points);
+	ReadPoints("../../data/tiny.txt",NumPoints, Points);
 
 
 	//2) Build Data Structure
-
+	kdtree tree; 
+	tree.bulkBuild(Points, NumPoints);
+	TestTree(tree, NumPoints);
 
 	//3) Move Data to GPU
 
@@ -146,6 +195,7 @@ int main(int argc, char**argv){
 	//6) Release memory
 
 
-
+	int dummy = 0;
+	std::cin >> dummy;
 	return 0;
 }
