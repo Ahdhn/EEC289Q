@@ -14,7 +14,8 @@
 #include <stdio.h>
 #include "tree.cpp"
 #include "RSD_imp.cu"
-#include "spokes.cu"
+
+//#include "spokes.cu"
 #include "kdtree.h"
 
 
@@ -166,7 +167,7 @@ void TestTree(kdtree& tree, size_t NumPoints)
 }
 int main(int argc, char**argv){
 	//0) Generate the input points
-	PointsGen("../../data/tiny.txt", 100000);
+	PointsGen("../../data/tiny.txt", 100);
 
 
 	DeviceQuery();
@@ -186,8 +187,9 @@ int main(int argc, char**argv){
 
 
 	//4) Launch kernels and record time
-
-
+	real* d_points = NULL; int* d_neighbors = NULL; int* d_delaunay = NULL;
+	RSD_Imp << <1, 32 >> > (d_points, d_neighbors, NumPoints, d_delaunay);
+	cudaDeviceSynchronize();
 
 	//5) Check correctness of the construction
 
