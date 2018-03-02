@@ -17,7 +17,7 @@ __global__ void RSD_Imp(real3* d_points, uint32_t* d_neighbors, int NPoints, uin
 		uint32_t myN = d_neighbors[MaxOffset * tid + iN];
 		printf(" %i", myN);
 	}
-	printf("\n.");
+	printf("\n");
 
 	if (tid > NPoints) return;
 

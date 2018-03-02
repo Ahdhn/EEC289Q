@@ -206,6 +206,10 @@ int main(int argc, char**argv){
 	
 	//3) Move Data to GPU
 	real3* d_points = NULL; uint32_t* d_neighbors = NULL; uint32_t* d_delaunay = NULL;
+	cudaMalloc((void**)&d_delaunay, NumPoints * MaxOffset * sizeof(uint32_t));
+	HANDLE_ERROR(cudaGetLastError());
+
+
 	cudaMalloc((void**)&d_points, NumPoints * sizeof(real3));
 	cudaMemcpy(d_points, Points, NumPoints * sizeof(real3), cudaMemcpyHostToDevice);
 	HANDLE_ERROR(cudaGetLastError());
@@ -219,13 +223,27 @@ int main(int argc, char**argv){
 	HANDLE_ERROR(cudaGetLastError());
 	cudaDeviceSynchronize();
 
-	//5) Check correctness of the construction
+	//5) Move results to CPU
+	uint32_t* h_delaunay = new uint32_t[NumPoints * MaxOffset];
+	cudaMemcpy(h_delaunay, d_delaunay, NumPoints * MaxOffset * sizeof(uint32_t), cudaMemcpyDeviceToHost);
 
 
-	//6) Release memory
+	//6) Check correctness of the construction
+
+
+	//7) Release memory
 
 
 	int dummy = 0;
 	std::cin >> dummy;
+
+
+	cudaFree(d_points);
+	cudaFree(d_neighbors);
+	cudaFree(d_delaunay);
+
+	delete[] Points;
+	delete[] h_neighbors;
+	delete[] h_delaunay;
 	return 0;
 }
