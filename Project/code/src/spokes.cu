@@ -4,8 +4,16 @@
 #include <math.h>
 
 typedef float real; //Change this between double or (float) single precision
-typedef float3 real3; //Change this between double or (float) single precision
+//typedef float3 real3; //Change this between double or (float) single precision
+struct real3
+{
+	real x, y, z;
 
+	real& operator [] (size_t index)
+	{
+		return *(&x + index);
+	}
+};
 __device__ __forceinline__ void CrossProdcut(const real xv1, const real yv1, const real zv1, //Input:Vector 1
 	                                         const real xv2, const real yv2, const real zv2, //Input:Vector 2
 	                                         real xx, real yy, real zz                       //Output:Vector 3

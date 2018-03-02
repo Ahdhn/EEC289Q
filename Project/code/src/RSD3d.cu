@@ -23,8 +23,8 @@ static void HandleError(cudaError_t err, const char *file, int line) {
 	//Error handling micro, wrap it around function whenever possible
 	if (err != cudaSuccess) {
 		printf("\n%s in %s at line %d\n", cudaGetErrorString(err), file, line);
-		//system("pause");
-		exit(EXIT_FAILURE);
+		system("pause");
+		//exit(EXIT_FAILURE);
 	}
 }
 #define HANDLE_ERROR( err ) (HandleError( err, __FILE__, __LINE__ ))
@@ -91,7 +91,7 @@ void DeviceQuery(int dev = 0){
 	const double maxBW = 2.0 * devProp.memoryClockRate*(devProp.memoryBusWidth / 8.0) / 1.0E3;
 	printf("\n  Peak Memory Bandwidth: %f(MB/s)\n\n", maxBW);
 }
-void ReadPoints(std::string FileName, int&NumPoints, real**&Points){
+void ReadPoints(std::string FileName, int&NumPoints, real3*&Points){
 	//Read the input set of points
 	//Points should be un-initialized
 	//the file should start with the number points
@@ -109,12 +109,12 @@ void ReadPoints(std::string FileName, int&NumPoints, real**&Points){
 
 	NumPoints = 0;
 	file >> NumPoints;
-	Points = new real*[NumPoints];
+	Points = new real3[NumPoints];
 
 	for (int i = 0; i < NumPoints; i++){
-		Points[i] = new real[3];
-
-		file >> Points[i][0] >> Points[i][1] >> Points[i][2];
+//		Points[i] = new real[3];
+//		file >> Points[i][0] >> Points[i][1] >> Points[i][2];
+		file >> Points[i].x >> Points[i].y >> Points[i].z;
 	}
 	file.close();
 	std::cout<<" NumPoints= "<<NumPoints<<std::endl;
@@ -174,21 +174,24 @@ int main(int argc, char**argv){
 
 	//1) Read input set of points
 	int NumPoints;
-	real ** Points=NULL;
+	real3* Points=NULL;
 	ReadPoints("../../data/tiny.txt",NumPoints, Points);
 
 
 	//2) Build Data Structure
 	kdtree tree; 
 	tree.bulkBuild(Points, NumPoints);
-	TestTree(tree, NumPoints);
-
+	//TestTree(tree, NumPoints);
+	
 	//3) Move Data to GPU
-
+	real3* d_points = NULL; int* d_neighbors = NULL; int* d_delaunay = NULL;
+	cudaMalloc((void**)&d_points, NumPoints * sizeof(real3));
+	cudaMemcpy(d_points, Points, NumPoints * sizeof(real3), cudaMemcpyHostToDevice);
+	HANDLE_ERROR(cudaGetLastError());
 
 	//4) Launch kernels and record time
-	real* d_points = NULL; int* d_neighbors = NULL; int* d_delaunay = NULL;
-	RSD_Imp << <1, 32 >> > (d_points, d_neighbors, NumPoints, d_delaunay);
+	RSD_Imp << <1, 1 >> > (d_points, d_neighbors, NumPoints, d_delaunay);
+	HANDLE_ERROR(cudaGetLastError());
 	cudaDeviceSynchronize();
 
 	//5) Check correctness of the construction

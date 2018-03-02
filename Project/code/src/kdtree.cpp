@@ -7,9 +7,10 @@ kdtree::kdtree(){
 
 kdtree::~kdtree(){
 	// destroy tree
+	delete[] pointsTree;
 }
 
-double kdtree::bulkBuild(real**&pointsExt, size_t numPointsExt){
+double kdtree::bulkBuild(real3*&pointsExt, size_t numPointsExt){
 
 	clock_t start = clock();
 	points = pointsExt;
@@ -37,7 +38,7 @@ void kdtree::bulkBuild(size_t start, size_t end, size_t iDim){
 	}
 
 	std::sort(points + start, points + end,
-		[iDim](real* a, real* b) -> bool
+		[iDim](real3& a, real3& b) -> bool
 	{
 		return a[iDim] < b[iDim];
 	});
@@ -103,7 +104,7 @@ void kdtree::treePointsInsideSphereBF(size_t iPoint, real r, size_t*& inside, si
 
 }
 
-void kdtree::addToKdtree(size_t idx, real*& pt){
+void kdtree::addToKdtree(size_t idx, real3& pt){
 
 	size_t inode = 0;
 	while (true)
@@ -112,7 +113,7 @@ void kdtree::addToKdtree(size_t idx, real*& pt){
 		double diff = pt[idim] - points[inode][idim];
 		if (diff == 0.0)
 		{
-			pt[idim] += 1e-5;
+			pt[idim] = pt[idim] + 1e-5;
 			continue;
 
 			printf("%f %f %f\n", pt[0], pt[1], pt[2]);

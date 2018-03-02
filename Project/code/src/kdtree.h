@@ -11,12 +11,12 @@ public:
 	kdtree();
 	~kdtree();
 //	void bulkBuild(real**&Points);
-	double bulkBuild(real**&pointsExt, size_t numPointsExt);
+	double bulkBuild(real3*&pointsExt, size_t numPointsExt);
 	void   bulkBuild(size_t start, size_t end, size_t iDim);
 
 	void treePointsInsideSphereBF(size_t iPoint, real r, size_t*& inside, size_t& numInside);
 	void treePointsInsideSphere(size_t iPoint, real r, size_t*& inside, size_t& numInside, size_t idx = 0);
-	void addToKdtree(size_t idx, real*& pt);
+	void addToKdtree(size_t idx, real3& pt);
 
 	
 	// helper
@@ -35,7 +35,7 @@ private:
 	};
 
 	node* pointsTree;
-	real** points;
+	real3* points;
 	size_t numPoints;
 };
 
