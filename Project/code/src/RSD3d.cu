@@ -17,15 +17,15 @@
 #include "kdtree.h"
 #include "utilities.h"
 #include "RSD_imp.cu"
-
+#include "validate.h"
 
 
 int main(int argc, char**argv){
 	//0) Generate the input points
 	PointsGen("../../data/tiny.txt", 100);
 
-
 	DeviceQuery();
+	
 
 	//1) Read input set of points
 	int NumPoints;
@@ -60,7 +60,7 @@ int main(int argc, char**argv){
 
 
 	//6) Check correctness of the construction
-
+	validate(NumPoints, Points, h_neighbors, h_delaunay);
 
 	//7) Release memory
 

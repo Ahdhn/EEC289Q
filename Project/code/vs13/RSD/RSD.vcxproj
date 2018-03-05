@@ -34,6 +34,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\src\kdtree.h" />
     <ClInclude Include="..\..\src\utilities.h" />
+    <ClInclude Include="..\..\src\validate.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{ECBDBD80-33B6-4CF1-A936-AA3BD34E0D6E}</ProjectGuid>
