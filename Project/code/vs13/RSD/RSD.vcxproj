@@ -30,7 +30,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\kdtree.cpp" />
-    <ClCompile Include="..\..\src\tree.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\kdtree.h" />
