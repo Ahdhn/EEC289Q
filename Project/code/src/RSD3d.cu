@@ -12,7 +12,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "tree.cpp"
 #include "RSD_imp.cu"
 #include <stdint.h>
 
@@ -24,8 +23,8 @@ static void HandleError(cudaError_t err, const char *file, int line) {
 	//Error handling micro, wrap it around function whenever possible
 	if (err != cudaSuccess) {
 		printf("\n%s in %s at line %d\n", cudaGetErrorString(err), file, line);
-		system("pause");
-		//exit(EXIT_FAILURE);
+		//system("pause");
+		exit(EXIT_FAILURE);
 	}
 }
 #define HANDLE_ERROR( err ) (HandleError( err, __FILE__, __LINE__ ))
@@ -151,12 +150,12 @@ void TestTree(kdtree& tree, size_t NumPoints)
 			for (size_t in = 0; in < numInside0; in++)
 				printf("%i, ", inside0[in]);
 
-			printf("point %i neighbors are (%i) : ", iPoint, numInside0);
+			printf("point %lu neighbors are (%i) : ", iPoint, numInside0);
 			for (size_t in = 0; in < numInside0; in++)
 				printf("%i, ", inside0[in]);
 			printf("\n");
 
-			printf("point %i neighbors are (%i) : ", iPoint, numInside1);
+			printf("point %lu neighbors are (%i) : ", iPoint, numInside1);
 			for (size_t in = 0; in < numInside1; in++)
 				printf("%i, ", inside1[in]);
 			printf("\n");
@@ -205,7 +204,7 @@ int main(int argc, char**argv){
 	//TestTree(tree, NumPoints);
 	
 	//3) Move Data to GPU
-	real3* d_points = NULL; uint32_t* d_neighbors = NULL; uint32_t* d_delaunay = NULL;
+	/*real3* d_points = NULL; uint32_t* d_neighbors = NULL; uint32_t* d_delaunay = NULL;
 	cudaMalloc((void**)&d_delaunay, NumPoints * MaxOffset * sizeof(uint32_t));
 	HANDLE_ERROR(cudaGetLastError());
 
@@ -244,6 +243,6 @@ int main(int argc, char**argv){
 
 	delete[] Points;
 	delete[] h_neighbors;
-	delete[] h_delaunay;
+	delete[] h_delaunay;*/
 	return 0;
 }

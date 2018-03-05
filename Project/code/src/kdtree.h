@@ -24,7 +24,7 @@ public:
 	void print_error(size_t line){
 		std::string fname = __FILE__;
 		fname = fname.substr(fname.find_last_of("/\\") + 1);
-		printf("Error in File: %s, Line %i. \n", fname.c_str(), line);
+		printf("Error in File: %s, Line %lu. \n", fname.c_str(), line);
 		system("pause");
 	}
 
