@@ -32,6 +32,8 @@
     <ClCompile Include="..\..\src\kdtree.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\circumSphere.h" />
+    <ClInclude Include="..\..\src\extractTets.h" />
     <ClInclude Include="..\..\src\kdtree.h" />
     <ClInclude Include="..\..\src\utilities.h" />
     <ClInclude Include="..\..\src\validate.h" />

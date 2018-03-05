@@ -18,6 +18,7 @@
 #include "utilities.h"
 #include "RSD_imp.cu"
 #include "validate.h"
+#include "extractTets.h"
 
 
 int main(int argc, char**argv){
@@ -60,7 +61,8 @@ int main(int argc, char**argv){
 
 
 	//6) Check correctness of the construction
-	validate(NumPoints, Points, h_neighbors, h_delaunay);
+	std::vector<std::vector<uint32_t>> myTets = extractTets(NumPoints, h_delaunay, MaxOffset);
+	validate(myTets, Points, h_neighbors,MaxOffset);	
 
 	//7) Release memory
 
