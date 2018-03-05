@@ -42,27 +42,21 @@ int main(int argc, char**argv){
 	//TestTree(tree, NumPoints);
 	
 	//3) Move Data to GPU
-	/*real3* d_points = NULL; uint32_t* d_neighbors = NULL; uint32_t* d_delaunay = NULL;
-	cudaMalloc((void**)&d_delaunay, NumPoints * MaxOffset * sizeof(uint32_t));
-	HANDLE_ERROR(cudaGetLastError());
-
-
-	cudaMalloc((void**)&d_points, NumPoints * sizeof(real3));
-	cudaMemcpy(d_points, Points, NumPoints * sizeof(real3), cudaMemcpyHostToDevice);
-	HANDLE_ERROR(cudaGetLastError());
-
-	cudaMalloc((void**)&d_neighbors, NumPoints * MaxOffset * sizeof(uint32_t));
-	cudaMemcpy(d_neighbors, h_neighbors, NumPoints * MaxOffset * sizeof(uint32_t), cudaMemcpyHostToDevice);
-	HANDLE_ERROR(cudaGetLastError());
-
+	real3* d_points = NULL; uint32_t* d_neighbors = NULL; uint32_t* d_delaunay = NULL;
+	HANDLE_ERROR(cudaMalloc((void**)&d_delaunay, NumPoints * MaxOffset * sizeof(uint32_t)));
+	HANDLE_ERROR(cudaMalloc((void**)&d_points, NumPoints * sizeof(real3)));
+	HANDLE_ERROR(cudaMemcpy(d_points, Points, NumPoints * sizeof(real3), cudaMemcpyHostToDevice));	
+	HANDLE_ERROR(cudaMalloc((void**)&d_neighbors, NumPoints * MaxOffset * sizeof(uint32_t)));
+	HANDLE_ERROR(cudaMemcpy(d_neighbors, h_neighbors, NumPoints * MaxOffset * sizeof(uint32_t), cudaMemcpyHostToDevice));
+	
 	//4) Launch kernels and record time
 	RSD_Imp << <1, 1 >> > (d_points, d_neighbors, NumPoints, d_delaunay, MaxOffset);
 	HANDLE_ERROR(cudaGetLastError());
-	cudaDeviceSynchronize();
+	HANDLE_ERROR(cudaDeviceSynchronize());
 
 	//5) Move results to CPU
 	uint32_t* h_delaunay = new uint32_t[NumPoints * MaxOffset];
-	cudaMemcpy(h_delaunay, d_delaunay, NumPoints * MaxOffset * sizeof(uint32_t), cudaMemcpyDeviceToHost);
+	HANDLE_ERROR(cudaMemcpy(h_delaunay, d_delaunay, NumPoints * MaxOffset * sizeof(uint32_t), cudaMemcpyDeviceToHost));
 
 
 	//6) Check correctness of the construction
@@ -81,6 +75,6 @@ int main(int argc, char**argv){
 
 	delete[] Points;
 	delete[] h_neighbors;
-	delete[] h_delaunay;*/
+	delete[] h_delaunay;
 	return 0;
 }
