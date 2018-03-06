@@ -43,7 +43,7 @@ void kdtree::bulkBuild(size_t start, size_t end, size_t iDim){
 		return a[iDim] < b[iDim];
 	});
 
-	size_t mid = 0.5*(start + end);
+	size_t mid = size_t(0.5*double(start + end));
 	std::swap(points[start], points[mid]);
 
 	if (start != 0)
@@ -71,7 +71,7 @@ void kdtree::treePointsInsideSphere(size_t iPoint, real r, uint32_t* inside, uin
 		real dist = dx * dx + dy * dy + dz * dz;
 
 		if (dist < r*r && iPoint != idx)
-			inside[numInside++] = idx;
+			inside[numInside++] = uint32_t(idx);
 
 		if (pointsTree[idx].pve) treePointsInsideSphere(iPoint, r, inside, numInside, pointsTree[idx].pve);
 		if (pointsTree[idx].nve) treePointsInsideSphere(iPoint, r, inside, numInside, pointsTree[idx].nve);
@@ -99,7 +99,7 @@ void kdtree::treePointsInsideSphereBF(size_t iPoint, real r, uint32_t*& inside, 
 		real dist = dx * dx + dy * dy + dz * dz;
 
 		if (dist < r*r && iPoint != in)
-			inside[numInside++] = in;
+			inside[numInside++] = uint32_t(in);
 	}
 
 }
@@ -113,7 +113,7 @@ void kdtree::addToKdtree(size_t idx, real3& pt){
 		double diff = pt[idim] - points[inode][idim];
 		if (diff == 0.0)
 		{
-			pt[idim] = pt[idim] + 1e-5;
+			pt[idim] = pt[idim] + real(1e-5);
 			continue;
 
 			printf("%f %f %f\n", pt[0], pt[1], pt[2]);

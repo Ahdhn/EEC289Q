@@ -2,6 +2,7 @@
 
 #include <curand.h>
 #include <math.h>
+#define _tol 10E-6
 
 typedef float real; //Change this between double or (float) single precision
 //typedef float3 real3; //Change this between double or (float) single precision
@@ -93,4 +94,15 @@ __device__ __forceinline__ bool SpokePlaneIntersect(const real pp_x, const real 
 
 	return true;
 
+}
+template <typename T>
+inline T Dist(T x1, T y1, T z1, T x2, T y2, T z2){
+	T dx, dy, dz;
+	dx = x1 - x2;
+	dy = y1 - y2;
+	dz = z1 - z2;
+	dx *= dx;
+	dy *= dy;
+	dz *= dz;
+	return dx + dy + dz;
 }
