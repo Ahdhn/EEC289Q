@@ -1,6 +1,6 @@
 #pragma once
 
-#include <curand.h>
+#include <curand_kernel.h>
 #include <math.h>
 #define _tol 10E-6
 
@@ -15,6 +15,27 @@ struct real3
 		return *(&x + index);
 	}
 };
+
+template <typename T>
+inline T Dist(T x1, T y1, T z1, T x2, T y2, T z2){
+	//square distance between point (x1,y1,z1) and (x2,y2,z2) 
+	T dx, dy, dz;
+	dx = x1 - x2;
+	dy = y1 - y2;
+	dz = z1 - z2;
+	dx *= dx;
+	dy *= dy;
+	dz *= dz;
+	return dx + dy + dz;
+}
+
+__global__ void initialise_curand_on_kernels(curandState * state, unsigned long seed)
+{
+	//https://nidclip.wordpress.com/2014/04/02/cuda-random-number-generation/
+	int idx = blockIdx.x*blockDim.x + threadIdx.x;
+	curand_init(seed, idx, 0, &state[idx]);
+}
+
 __device__ __forceinline__ void CrossProdcut(const real xv1, const real yv1, const real zv1, //Input:Vector 1
 	                                         const real xv2, const real yv2, const real zv2, //Input:Vector 2
 	                                         real xx, real yy, real zz                       //Output:Vector 3
@@ -65,7 +86,7 @@ __device__ __forceinline__ void RandSpoke3D(const real x, const  real y, const r
 	//Random spoke sampling in the 3d domain; there is no constraints at all
 
 	//TODO use curand random generator 	
-
+	
 }
 
 __device__ __forceinline__ bool SpokePlaneIntersect(const real pp_x, const real pp_y, const real pp_z, const real pv_x,  const real pv_y,  const real pv_z,  //Input: plane (point, normal vector)
@@ -94,15 +115,4 @@ __device__ __forceinline__ bool SpokePlaneIntersect(const real pp_x, const real 
 
 	return true;
 
-}
-template <typename T>
-inline T Dist(T x1, T y1, T z1, T x2, T y2, T z2){
-	T dx, dy, dz;
-	dx = x1 - x2;
-	dy = y1 - y2;
-	dz = z1 - z2;
-	dx *= dx;
-	dy *= dy;
-	dz *= dz;
-	return dx + dy + dz;
 }

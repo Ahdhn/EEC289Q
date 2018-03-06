@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <curand.h>
 
 #include "kdtree.h"
 #include "utilities.h"
@@ -50,6 +51,13 @@ int main(int argc, char**argv){
 	HANDLE_ERROR(cudaMalloc((void**)&d_neighbors, NumPoints * MaxOffset * sizeof(uint32_t)));
 	HANDLE_ERROR(cudaMemcpy(d_neighbors, h_neighbors, NumPoints * MaxOffset * sizeof(uint32_t), cudaMemcpyHostToDevice));
 	
+	srand(time(NULL));
+	curandState* deviceStates;
+	HANDLE_ERROR(cudaMalloc(&deviceStates, 100 * sizeof(curandState)));
+	initialise_curand_on_kernels << <100 / 1024 + 1, 1024 >> >(deviceStates, unsigned(time(NULL)));
+	HANDLE_ERROR(cudaDeviceSynchronize());
+
+
 	//4) Launch kernels and record time
 	RSD_Imp << <1, 1 >> > (d_points, d_neighbors, NumPoints, d_delaunay, MaxOffset);
 	HANDLE_ERROR(cudaGetLastError());
@@ -74,6 +82,7 @@ int main(int argc, char**argv){
 	cudaFree(d_points);
 	cudaFree(d_neighbors);
 	cudaFree(d_delaunay);
+	cudaFree(deviceStates);
 
 	delete[] Points;
 	delete[] h_neighbors;
