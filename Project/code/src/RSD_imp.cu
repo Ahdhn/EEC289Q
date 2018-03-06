@@ -21,9 +21,12 @@ __global__ void RSD_Imp(real3* d_points, uint32_t* d_neighbors, int NPoints, uin
 	}
 	printf("\n");
 
-	if (tid > NPoints) return;
+	if (tid > NPoints){ return; }
+	
+	//real xx, yy, zz;
+	//RandSpoke3D(0, 0, 0, xx, yy, zz, globalState, tid);
 
-	Explore(tid); 
+	explore(tid); 
 
 	// Now we have 3 neighbors and a vertex:
 	uint3 neighbors;

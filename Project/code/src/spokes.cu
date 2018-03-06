@@ -2,6 +2,7 @@
 
 
 #include <curand_kernel.h>
+#include <stdio.h>
 #include <math.h>
 #define _tol 10E-6
 
@@ -89,13 +90,16 @@ __device__ __forceinline__ void RandSpoke2D(const real x,const real y, const rea
 	
 }
 __device__ __forceinline__ void RandSpoke3D(const real x, const  real y, const real z, //Input: starting point of the spoke
-	                                        real&xv, real&yv, real&zv,                  //Output: direction of the spoke 
-											curandState* globalState                    //global state for rand generate 
+	                                        real&xv, real&yv, real&zv,                 //Output: direction of the spoke 
+											curandState* globalState, int randID       //global state for rand generate 
 											){
 	//Random spoke sampling in the 3d domain; there is no constraints at all
+		
+	xv = generateRAND(globalState, randID);
+	yv = generateRAND(globalState, randID);
+	zv = generateRAND(globalState, randID);	
 
-	//TODO use curand random generator 	
-	
+	printf("\n xv= %f, yv= %f, zv= %f", xv, yv, zv);
 }
 
 __device__ __forceinline__ bool SpokePlaneIntersect(const real pp_x, const real pp_y, const real pp_z, const real pv_x,  const real pv_y,  const real pv_z,  //Input: plane (point, normal vector)

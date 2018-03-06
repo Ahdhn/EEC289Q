@@ -59,11 +59,13 @@ int main(int argc, char**argv){
 	HANDLE_ERROR(cudaMalloc((void**)&d_neighbors, NumPoints * MaxOffset * sizeof(uint32_t)));
 	HANDLE_ERROR(cudaMemcpy(d_neighbors, h_neighbors, NumPoints * MaxOffset * sizeof(uint32_t), cudaMemcpyHostToDevice));
 	
-	srand(time(NULL));
-	curandState* deviceStates;
-	HANDLE_ERROR(cudaMalloc(&deviceStates, 100 * sizeof(curandState)));
-	initialise_curand_on_kernels << <100 / 1024 + 1, 1024 >> >(deviceStates, unsigned(time(NULL)));
-	HANDLE_ERROR(cudaDeviceSynchronize());
+	//3.5) initialize rand number generator 
+	//srand(time(NULL));
+	curandState* deviceStates = NULL;
+	/*int num = 1;
+	HANDLE_ERROR(cudaMalloc(&deviceStates, num * sizeof(curandState)));
+	initialise_curand_on_kernels << <num / 1024 + 1, 1024 >> >(deviceStates, unsigned(time(NULL)));
+	HANDLE_ERROR(cudaDeviceSynchronize());*/
 
 
 	//4) Launch kernels and record time
