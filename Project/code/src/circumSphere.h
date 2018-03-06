@@ -97,13 +97,13 @@ inline real circumSphere(const real x1, const real y1, const real z1,
 	A[4][1] = a41; A[4][2] = x4; A[4][3] = y4; A[4][4] = z4;
 	M15 = Determinant4(A);
 
-	xo = 0.5*M12 / M11;
-	yo = -0.5*M13 / M11;
-	zo = 0.5*M14 / M11;
+	xo = real(0.5)*M12 / M11;
+	yo = real(-0.5)*M13 / M11;
+	zo = real(0.5)*M14 / M11;
 
 	real rrr = xo*xo + yo*yo + zo*zo - M15 / M11;
 
-	real dist1, dist2, dist3, dist4, tol(0);
+	real dist1, dist2, dist3, dist4;
 	dist1 = Dist(xo, yo, zo, x1, y1, z1);
 	dist2 = Dist(xo, yo, zo, x2, y2, z2);
 	dist3 = Dist(xo, yo, zo, x3, y3, z3);

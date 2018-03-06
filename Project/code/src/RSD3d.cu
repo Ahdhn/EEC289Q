@@ -15,12 +15,20 @@
 #include <stdint.h>
 #include <curand.h>
 
+
 #include "kdtree.h"
 #include "utilities.h"
 #include "RSD_imp.cu"
 #include "validate.h"
 #include "extractTets.h"
 
+__global__ void initialise_curand_on_kernels(curandState * state, unsigned long seed)
+{
+	//stolen from https://nidclip.wordpress.com/2014/04/02/cuda-random-number-generation/
+
+	int idx = blockIdx.x * blockDim.x + threadIdx.x;
+	curand_init(seed, idx, 0, &state[idx]);
+}
 
 int main(int argc, char**argv){
 	//0) Generate the input points
@@ -59,7 +67,7 @@ int main(int argc, char**argv){
 
 
 	//4) Launch kernels and record time
-	RSD_Imp << <1, 1 >> > (d_points, d_neighbors, NumPoints, d_delaunay, MaxOffset);
+	RSD_Imp << <1, 1 >> > (d_points, d_neighbors, NumPoints, d_delaunay, MaxOffset, deviceStates);
 	HANDLE_ERROR(cudaGetLastError());
 	HANDLE_ERROR(cudaDeviceSynchronize());
 

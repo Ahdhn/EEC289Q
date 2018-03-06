@@ -2,8 +2,10 @@
 #include "propagate.cu"
 #include "explore.cu"
 #include <stdint.h>
+#include <curand_kernel.h>
 
-__global__ void RSD_Imp(real3* d_points, uint32_t* d_neighbors, int NPoints, uint32_t* d_delaunay, int MaxOffset){
+
+__global__ void RSD_Imp(real3* d_points, uint32_t* d_neighbors, int NPoints, uint32_t* d_delaunay, int MaxOffset, curandState* globalState){
 
 	int tid = threadIdx.x + blockIdx.x * blockDim.x;
 	

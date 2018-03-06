@@ -1,5 +1,6 @@
 #pragma once
 
+
 #include <curand_kernel.h>
 #include <math.h>
 #define _tol 10E-6
@@ -29,13 +30,20 @@ inline T Dist(T x1, T y1, T z1, T x2, T y2, T z2){
 	return dx + dy + dz;
 }
 
-__global__ void initialise_curand_on_kernels(curandState * state, unsigned long seed)
+__device__  __forceinline__ real generateRAND(curandState* globalState, int ind)
 {
-	//https://nidclip.wordpress.com/2014/04/02/cuda-random-number-generation/
-	int idx = blockIdx.x*blockDim.x + threadIdx.x;
-	curand_init(seed, idx, 0, &state[idx]);
-}
+	//generate random number (callable from the device)
 
+	//stolen from https://nidclip.wordpress.com/2014/04/02/cuda-random-number-generation/
+	//copy state to local mem
+	curandState localState = globalState[ind];
+	//apply uniform distribution with calculated random
+	real rndval = curand_uniform(&localState);
+	//update state
+	globalState[ind] = localState;
+	//return value
+	return rndval;
+}
 __device__ __forceinline__ void CrossProdcut(const real xv1, const real yv1, const real zv1, //Input:Vector 1
 	                                         const real xv2, const real yv2, const real zv2, //Input:Vector 2
 	                                         real xx, real yy, real zz                       //Output:Vector 3
@@ -81,7 +89,8 @@ __device__ __forceinline__ void RandSpoke2D(const real x,const real y, const rea
 	
 }
 __device__ __forceinline__ void RandSpoke3D(const real x, const  real y, const real z, //Input: starting point of the spoke
-	                                        real&xv, real&yv, real&zv                  //Output: direction of the spoke 
+	                                        real&xv, real&yv, real&zv,                  //Output: direction of the spoke 
+											curandState* globalState                    //global state for rand generate 
 											){
 	//Random spoke sampling in the 3d domain; there is no constraints at all
 
