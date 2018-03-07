@@ -68,15 +68,23 @@ There has been a decent amount of work devoted to parallelize the DT computation
 \end{itemize}
 
 \section*{Deliverables}
-We promise, to the best of our capacity, the deliver the followings through this project
+
+\begin{enumerate}
+\item We will deliver the code that implements RSD in 3D with the following inputs and outputs:
 \begin{itemize}
-\item Exploring and reporting the challenges of implementing the RSD algorithm in 3D
-\item Reporting our experience with solving these challenges 
-\item Valid and robust implementation of the RSD algorithm in 3D on the GPU using CUDA
-\item Comparison against the available code of ~\citep{cao2014gpu} to get a taste on where we stand. 
+\item Input: sample points in 3D space
+\item Output: Delaunay-based tetrahedral meshing of the points based on RSD algorithm
+\end{itemize}
+\item Evaluation:
+\begin{itemize}
+
+\item Correctness (validating the correctness of our Delaunay mesh using TetGen~\citep{si2015tetgen}).
+\item Runtime comparison with (gDel3D:  GPU accelerated algorithm for 3D Delaunay triangulation~\citep{cao2014gpu}).
 \end{itemize}
 
+\end{enumerate}
 
+We will give the necessary directions for validation with TetGen.
 
 \bibliography{mybib}
 \end{document}
