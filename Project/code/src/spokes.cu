@@ -99,7 +99,7 @@ __device__ __forceinline__ void RandSpoke3D(const real x, const  real y, const r
 	yv = generateRAND(globalState, randID);
 	zv = generateRAND(globalState, randID);	
 
-	printf("\n xv= %f, yv= %f, zv= %f", xv, yv, zv);
+	//printf("\n xv= %f, yv= %f, zv= %f\n", xv, yv, zv);
 }
 
 __device__ __forceinline__ bool SpokePlaneIntersect(const real pp_x, const real pp_y, const real pp_z, const real pv_x,  const real pv_y,  const real pv_z,  //Input: plane (point, normal vector)

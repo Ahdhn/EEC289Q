@@ -32,15 +32,15 @@ __global__ void initialise_curand_on_kernels(curandState * state, unsigned long 
 
 int main(int argc, char**argv){
 	//0) Generate the input points
-	PointsGen("../../data/tiny.txt", 100);
+	PointsGen("../data/tiny.txt", 100);
 
-	DeviceQuery();
+	DeviceQuery(3);
 	
 
 	//1) Read input set of points
 	int NumPoints;
 	real3* Points=NULL;
-	ReadPoints("../../data/tiny.txt",NumPoints, Points);
+	ReadPoints("../data/tiny.txt",NumPoints, Points);
 
 
 	//2) Build Data Structure
@@ -62,14 +62,14 @@ int main(int argc, char**argv){
 	//3.5) initialize rand number generator 
 	//srand(time(NULL));
 	curandState* deviceStates = NULL;
-	/*int num = 1;
+	int num = 1;
 	HANDLE_ERROR(cudaMalloc(&deviceStates, num * sizeof(curandState)));
 	initialise_curand_on_kernels << <num / 1024 + 1, 1024 >> >(deviceStates, unsigned(time(NULL)));
-	HANDLE_ERROR(cudaDeviceSynchronize());*/
+	HANDLE_ERROR(cudaDeviceSynchronize());
 
 
 	//4) Launch kernels and record time
-	RSD_Imp << <1, 1 >> > (d_points, d_neighbors, NumPoints, d_delaunay, MaxOffset, deviceStates);
+	RSD_Imp << <1, 100 >> > (d_points, d_neighbors, NumPoints, d_delaunay, MaxOffset, deviceStates);
 	HANDLE_ERROR(cudaGetLastError());
 	HANDLE_ERROR(cudaDeviceSynchronize());
 
@@ -85,14 +85,11 @@ int main(int argc, char**argv){
 	//7) Release memory
 
 
-	int dummy = 0;
-	std::cin >> dummy;
-
-
+	
 	cudaFree(d_points);
 	cudaFree(d_neighbors);
 	cudaFree(d_delaunay);
-	cudaFree(deviceStates);
+	//cudaFree(deviceStates);
 
 	delete[] Points;
 	delete[] h_neighbors;

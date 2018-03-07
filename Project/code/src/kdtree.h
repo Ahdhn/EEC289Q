@@ -25,7 +25,7 @@ public:
 		std::string fname = __FILE__;
 		fname = fname.substr(fname.find_last_of("/\\") + 1);
 		printf("Error in File: %s, Line %lu. \n", fname.c_str(), line);
-		system("pause");
+		//system("pause");
 	}
 
 private:
