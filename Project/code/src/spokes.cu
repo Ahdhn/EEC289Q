@@ -47,7 +47,7 @@ __device__  __forceinline__ real generateRAND(curandState* globalState, int ind)
 }
 __device__ __forceinline__ void CrossProdcut(const real xv1, const real yv1, const real zv1, //Input:Vector 1
 	                                         const real xv2, const real yv2, const real zv2, //Input:Vector 2
-	                                         real xx, real yy, real zz                       //Output:Vector 3
+	                                         real&xx, real&yy, real&zz                       //Output:Vector 3
 	                                        ){
 	//Find the cross product between vector 1 and vectro 2
 	xx = yv1*zv2 - zv1*yv2;
@@ -66,7 +66,8 @@ __device__ __forceinline__ real DotProdcut(const real xv1, const real yv1, const
 __device__ __forceinline__ void RandSpoke1D(const real x,const real y, const real z,        //Input: starting point of the spoke
 	                                        const real xn1, const real yn1, const real zn1, //Input: normal to the plane 1 
 											const real xn2, const real yn2, const real zn2, //Input: normal to the plane 2 
-	                                        real&xv, real&yv, real&zv                       //Output: direction of the spoke 
+	                                        real&xv, real&yv, real&zv,                       //Output: direction of the spoke 
+	                                        curandState* globalState, int randID       //global state for rand generate 
 											){
 
 	//Random spoke sampling along a 1D line defined by the intersection
@@ -77,16 +78,50 @@ __device__ __forceinline__ void RandSpoke1D(const real x,const real y, const rea
 	real xv_per, yv_per, zv_per;//the perpenduclar vector of the two input vectors (the direction over which we gonna sample)
 	CrossProdcut(xn1, yn1, zn1, xn2, yn2, zn2, xv, yv, zv);
 
-	//TODO maybe it is beneficial to randomly alternative the direction to point 
-	//in the opposite direction 
+	
+	//randomly alternative the direction to point in the opposite direction 
+	real randNum = generateRAND(globalState, randID);	
+	if(randNum < 0.5){
+		xv *=-1;
+		yv *=-1;
+		zv *=-1;
+	}
+
+	//testing 
+	/*real dot1 = DotProdcut(xv,yv,zv, xn1,yn1,zn1);
+	real dot2 = DotProdcut(xv,yv,zv, xn2,yn2,zn2);
+	printf("\n dot1= %f, dot2= %f", dot1, dot2);*/
+
 }
 __device__ __forceinline__ void RandSpoke2D(const real x,const real y, const real z,     //Input: starting point of the spoke
 	                                        const real xn, const real yn, const real zn, //Input: normal to the plane  
-	                                        real&xv, real&yv, real&zv                    //Output: direction of the spoke 
+	                                        real&xv, real&yv, real&zv,                    //Output: direction of the spoke 
+	                                        curandState* globalState, int randID       //global state for rand generate 
 											){
 	//Random spoke sampling in a 2D plane embedded in the 3D domain
-	//spoke starting point should be on the 2D plane (not checked)
-	//The 2d plane is defined by its normal vector 
+	//spoke starting point should be on the 2D plane 
+	//The 2d plane is defined by its normal vector
+
+	//Algorithm: generate random vector in 3d. The cross product of
+	//this random vector with (xn,yn,zn) will give a vector perpendiuclar 
+	//to (xn,yn,zn). The returned spoke has the same starting point 
+	//(x,y,z) 
+	real Vx_rand = generateRAND(globalState, randID);	
+	real Vy_rand = generateRAND(globalState, randID);
+	real Vz_rand = generateRAND(globalState, randID);
+
+	CrossProdcut(xn, yn, zn, Vx_rand, Vy_rand, Vz_rand, xv, yv, zv);
+
+	//testing 
+	/*real dot = DotProdcut(xv,yv,zv, xn,yn,zn);
+	printf("\n Vx_rand= %f, Vy_rand= %f, Vz_rand= %f",Vx_rand, Vy_rand, Vz_rand);
+	printf("\n \n xn= %f, yn= %f, zn= %f \n xv= %f, yv= %f, zv= %f",
+		          xn,     yn,     zn,       xv,     yv,     zv);
+	printf("\n dot =%f\n",dot );
+	printf("\n px =%f, py =%f, pz =%f\n", x+0.2*xn, y+0.2*yn, z+0.2*zn);
+	printf("\n qx =%f, qy =%f, qz =%f\n", x+0.2*xv, y+0.2*yv, z+0.2*zv);*/
+
+	
 	
 }
 __device__ __forceinline__ void RandSpoke3D(const real x, const  real y, const real z, //Input: starting point of the spoke
@@ -97,7 +132,7 @@ __device__ __forceinline__ void RandSpoke3D(const real x, const  real y, const r
 		
 	xv = generateRAND(globalState, randID);
 	yv = generateRAND(globalState, randID);
-	zv = generateRAND(globalState, randID);	
+	zv = generateRAND(globalState, randID);
 
 	//printf("\n xv= %f, yv= %f, zv= %f\n", xv, yv, zv);
 }

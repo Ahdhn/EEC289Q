@@ -69,7 +69,7 @@ int main(int argc, char**argv){
 
 
 	//4) Launch kernels and record time
-	RSD_Imp << <1, 100 >> > (d_points, d_neighbors, NumPoints, d_delaunay, MaxOffset, deviceStates);
+	RSD_Imp << <1, 1 >> > (d_points, d_neighbors, NumPoints, d_delaunay, MaxOffset, deviceStates);
 	HANDLE_ERROR(cudaGetLastError());
 	HANDLE_ERROR(cudaDeviceSynchronize());
 
