@@ -1,9 +1,250 @@
 #include "spokes.cu"
 #include <stdint.h>
 
-__device__ __forceinline__ void explore(int tid){
+//Everything in global memory 
 
-	//printf("I'm Thread No. %i and I'm Exploring.\n", tid);
+//****************************************************************************************************
+__device__ __forceinline__ uint32_t NeighbourTriming(const real x_vertex, const real y_vertex, const real z_vertex, //Input: spoke starting point 
+	                                                 real&spoke3d_x_end, real&spoke3d_y_end, real&spoke3d_z_end, //Input/Output: spoke end point 
+	                                                 real&trimmingN_x, real&trimmingN_y, real&trimmingN_z, //Output: last neighbour to trim the spoke 
+	                                                 const uint32_t skip1, const uint32_t skip2, const uint32_t skip3, const uint32_t skip4,//Input: neighbour to skip
+											         const uint32_t neighbour_count, //Input: number of my vertex neighbours 
+											         const uint32_t base, //Input: base for indexing neighbour list 
+											         uint32_t* d_neighbors, //Input: all neighbours 
+											         real3* d_points){   //Input: all points 
+	
+	//loop over the neighbour of my vertex (neighbour_count) and trim the input spoke 
+	//using Voronoi planes, 
+	//return the trimmed spoke, the neighbour that trimmed it the shortest 
+	uint32_t trimming_neighbour;
 
+	for(uint32_t i=1; i<= neighbour_count; i++){
+		uint32_t myNeighbour = d_neighbors[base + i];
+		if(myNeighbour == skip1 || myNeighbour == skip2 || myNeighbour == skip3 || myNeighbour == skip4){ continue; }
+		real x_neighbour(d_points[myNeighbour].x),
+		     y_neighbour(d_points[myNeighbour].y),
+		     z_neighbour(d_points[myNeighbour].z);
+
+		real mid_x = (x_neighbour + x_vertex)/2;//point on the trimming plane 
+		real mid_y = (y_neighbour + y_vertex)/2;
+		real mid_z = (z_neighbour + z_vertex)/2;
+
+		real norm_p_x = x_neighbour - x_vertex;//normal to the plane 
+		real norm_p_y = y_neighbour - y_vertex;
+		real norm_p_z = z_neighbour - z_vertex;
+
+
+		if(SpokePlaneTrimming(mid_x, mid_y, mid_z, norm_p_x, norm_p_y, norm_p_z, //trimming plane 
+			                  x_vertex, y_vertex, z_vertex, spoke3d_x_end, spoke3d_y_end, spoke3d_z_end) //spoke
+			                  ){
+			trimming_neighbour = myNeighbour;
+			trimmingN_x = x_neighbour;
+			trimmingN_y = y_neighbour;
+			trimmingN_z = z_neighbour;
+		}		
+	}
+	return trimming_neighbour;
+}
+
+
+//****************************************************************************************************
+__device__ __forceinline__ uint32_t ThreeDSpoking(const uint32_t VertexID, //Input: vertex id (start of the spoke)
+												  const real spoke3d_x_st, const real spoke3d_y_st, const real spoke3d_z_st, //Input: spoke starting point
+												  real&spoke3d_x_end, real&spoke3d_y_end, real&spoke3d_z_end, //Output: spoke end point after trimming 
+										          const uint32_t base,//Input: base to index the neighbour array 
+										          const uint32_t neighbour_count,//Input: neighbour of the vertex neighbours 
+										          real&grandparent_x, real&grandparent_y, real&grandparent_z, //Output: the grandparent neighbour coordinates 
+										          uint32_t* d_neighbors, //Input: all neighbours
+										          real3* d_points,       //Input: all points 
+										          curandState* globalState, int randID){//Input: global state for rand generate 
+
+	//Shot and trim 3D spoke 
+	//Return the last neighbour vertex that trimmed the spoke and the end point of the spoke 
+	//grandparent is the neighnour that will trim the spoke the shortest 
+
+	//We use the spoke end as a proxy for direction here and then set the end point correctly after that
+	RandSpoke3D(spoke3d_x_st, spoke3d_y_st, spoke3d_z_st, spoke3d_x_end, spoke3d_y_end, spoke3d_z_end, globalState, randID);
+	
+	spoke3d_x_end = spoke3d_x_st + 1000*spoke3d_x_end;
+	spoke3d_y_end = spoke3d_y_st + 1000*spoke3d_y_end;
+	spoke3d_z_end = spoke3d_z_st + 1000*spoke3d_z_end;
+	
+	uint32_t grandparent;
+	grandparent = NeighbourTriming(spoke3d_x_st, spoke3d_y_st, spoke3d_z_st, 
+		                           spoke3d_x_end, spoke3d_y_end, spoke3d_z_end,
+		                           grandparent_x, grandparent_y, grandparent_z,
+		                           VertexID, VertexID, VertexID, VertexID,
+		                           neighbour_count, base, d_neighbors, d_points);
+	return grandparent;
+}
+
+//****************************************************************************************************
+__device__ __forceinline__ uint32_t TwoDSpoking(const uint32_t VertexID, //Input: vertex id (start of the spoke)
+												const real spoke2d_x_st, const real spoke2d_y_st, const real spoke2d_z_st, //Input: spoke starting point
+												real&spoke2d_x_end, real&spoke2d_y_end, real&spoke2d_z_end, //Output: spoke end point after trimming 
+										        const uint32_t base,//Input: base to index the neighbour array 
+										        const uint32_t neighbour_count,//Input: neighbour of the vertex neighbours 
+										        real&parent_x, real&parent_y, real&parent_z, //Output: the parent neighbour coordinates 
+										        const uint32_t grandparent, //Input: the neighbour with whom the spoke lives on its voronoi facet 
+										        const real grandparent_x, const real grandparent_y,  const real grandparent_z,//Input: grandparent neighbour coordinates 
+										        uint32_t* d_neighbors, //Input: all neighbours
+										        real3* d_points,       //Input: all points 
+										        curandState* globalState, int randID){//Input: global state for rand generate
+
+	//Shot and trim 2D spoke 
+	//Return the last neighbour vertex that trimmed the spoke and the end point of the spoke 
+
+	real norm_p_x = grandparent_x - spoke2d_x_st;//normal to the plane 
+	real norm_p_y = grandparent_y - spoke2d_y_st;
+	real norm_p_z = grandparent_z - spoke2d_z_st;
+
+	//We use the spoke end as a proxy for direction here and then set the end point correctly after that
+	RandSpoke2D(spoke2d_x_st, spoke2d_y_st, spoke2d_z_st, //2D spoke starting point 
+		        norm_p_x, norm_p_y, norm_p_z, //normal to the plane 
+		        spoke2d_x_end, spoke2d_y_end, spoke2d_z_end, //2d spoke direction 
+		        globalState, randID);
+
+	spoke2d_x_end = spoke2d_x_st + 1000*spoke2d_x_end;
+	spoke2d_y_end = spoke2d_y_st + 1000*spoke2d_y_end;
+	spoke2d_z_end = spoke2d_z_st + 1000*spoke2d_z_end;
+
+	uint32_t parent;	
+	parent = NeighbourTriming(spoke2d_x_st, spoke2d_y_st, spoke2d_z_st, 
+		                      spoke2d_x_end, spoke2d_y_end, spoke2d_z_end,
+		                      parent_x, parent_y, parent_z,
+		                      VertexID, grandparent, VertexID, VertexID, 
+		                      neighbour_count, base, d_neighbors, d_points);
+	return parent;
+
+
+
+
+}
+
+//****************************************************************************************************
+__device__ __forceinline__ uint32_t OneDSpoking(const uint32_t VertexID, //Input: vertex id (start of the spoke)
+									            const real spoke1d_x_st, const real spoke1d_y_st, const real spoke1d_z_st, //Input: spoke starting point
+									            real&spoke1d_x_end, real&spoke1d_y_end, real&spoke1d_z_end, //Output: spoke end point after trimming 
+									            const uint32_t base,//Input: base to index the neighbour array 
+									            const uint32_t neighbour_count,//Input: neighbour of the vertex neighbours 									            
+										        const uint32_t grandparent, //Input: the neighbour with whom the spoke lives on its voronoi facet 
+										        const real grandparent_x, const real grandparent_y, const real grandparent_z,//Input: grandparent neighbour coordinates 
+										        const uint32_t parent, //Input: the other neighbout with whom the spoke lives on another voronoi facet 
+										        const real parent_x, const real parent_y, const real parent_z,//Input: parent neighbour coordinates 
+										        uint32_t* d_neighbors, //Input: all neighbours
+										        real3* d_points,       //Input: all points 
+										        curandState* globalState, int randID){//Input: global state for rand generate
+
+	//Shot and trim 1D spoke 
+	//Return the last neighbour vertex that trimmed the spoke and the end point of the spoke
+
+	real norm_p1_x = grandparent_x - spoke1d_x_st;//normal to the plane 1
+	real norm_p1_y = grandparent_y - spoke1d_y_st;
+	real norm_p1_z = grandparent_z - spoke1d_z_st;
+
+	real norm_p2_x = parent_x - spoke1d_x_st;//normal to the plane 2
+	real norm_p2_y = parent_y - spoke1d_y_st;
+	real norm_p2_z = parent_z - spoke1d_z_st;
+
+	RandSpoke1D(spoke1d_x_st, spoke1d_y_st, spoke1d_z_st,
+	            norm_p1_x, norm_p1_y, norm_p1_z,
+	            norm_p2_x, norm_p2_y, norm_p2_z,
+	            spoke1d_x_end, spoke1d_y_end, spoke1d_z_end,
+	            globalState, randID);
+
+	spoke1d_x_end = spoke1d_x_st + 1000*spoke1d_x_end;
+	spoke1d_y_end = spoke1d_y_st + 1000*spoke1d_y_end;
+	spoke1d_z_end = spoke1d_z_st + 1000*spoke1d_z_end;	
+
+	uint32_t child;
+	real child_x, child_y, child_z;
+	child = NeighbourTriming(spoke1d_x_st, spoke1d_y_st, spoke1d_z_st, 
+		                     spoke1d_x_end, spoke1d_y_end, spoke1d_z_end,
+		                     child_x, child_y, child_z,
+		                     VertexID, grandparent, parent, VertexID, 
+		                     neighbour_count, base, d_neighbors, d_points);
+	return child;
+
+
+	
+}
+
+//****************************************************************************************************
+__device__ __forceinline__ void explore(uint32_t vertexID, //Input: vertex to explore 
+                                        real3* d_points,   //Input: all points 
+                                        uint32_t* d_neighbors, //Input: all neighbours 
+                                        const int MaxOffset,   //Input: shift in neighbour array
+                                        curandState* globalState, int randID,  //Input: global state for rand generate 
+                                        uint3&exploredID, //Output: the id of three samples connected to vertexID
+                                        real3&sharedVertex){  //Output: shared voronoi vertex between exploredID                                        
+
+	real x_vertex(d_points[vertexID].x),
+	     y_vertex(d_points[vertexID].y), 
+	     z_vertex(d_points[vertexID].z);
+
+	uint32_t base = MaxOffset* vertexID;//base for index the neighbour list 
+	uint32_t neighbour_count = d_neighbors[base]; //number of neighbour around this vertex
+	real grandparent_x, grandparent_y, grandparent_z,
+	     parent_x, parent_y, parent_z;
+	     
+
+	
+	//Shot and trim a 3D spoke with all neighbours and keep a record for the last trimming 
+	//neighbour -> grandparent neighbour 
+	real spoke3d_x_end, spoke3d_y_end, spoke3d_z_end;
+	uint32_t grandparent = ThreeDSpoking(vertexID,
+										 x_vertex, y_vertex, z_vertex,
+										 spoke3d_x_end, spoke3d_y_end, spoke3d_z_end, 
+										 base,
+										 neighbour_count,
+										 grandparent_x, grandparent_y, grandparent_z,
+										 d_neighbors, 
+										 d_points,
+										 globalState, randID);
+
+
+	//Shot 2D spoke from the intersection point 
+	//Trim the 2D spoke with all the neighbours (excpect the grandparent neighbour)
+	//and keep a record for the last trimming neighbour -> parent neighbour
+	real spoke2d_x_end, spoke2d_y_end, spoke2d_z_end;
+	uint32_t parent = TwoDSpoking(vertexID, 
+								  spoke3d_x_end, spoke3d_y_end, spoke3d_z_end,
+	                              spoke2d_x_end, spoke2d_y_end, spoke2d_z_end,
+	                              base,
+	                              neighbour_count,
+	                              parent_x, parent_y, parent_z,
+	                              grandparent,
+	                              grandparent_x, grandparent_y, grandparent_z,
+	                              d_neighbors, 
+								  d_points,
+								  globalState, randID);
+
+	                
+	//Shot 1D spoke 
+	//Trim the 1D spoke with all the neighbours  (excpect the grandparent and parent neighbours)
+	//and keep a record for the last trimming neighbour -> child neighbour
+    real spoke1d_x_end, spoke1d_y_end, spoke1d_z_end;
+    uint32_t child = OneDSpoking(vertexID, 
+								 spoke2d_x_end, spoke2d_y_end, spoke2d_z_end,
+								 spoke1d_x_end, spoke1d_y_end, spoke1d_z_end,
+								 base,
+								 neighbour_count,								 
+								 grandparent,
+								 grandparent_x, grandparent_y, grandparent_z,
+								 parent,
+								 parent_x, parent_y, parent_z, 
+								 d_neighbors,
+								 d_points,
+								 globalState, randID);
+
+    
+	//Return the grandparent, parent and child as exploredID 
+	//Return the end point of the 1D spoke as sharedVertex
+	exploredID.x = grandparent; 
+    exploredID.y = parent; 
+    exploredID.z = child; 
+    sharedVertex.x = spoke1d_x_end;
+    sharedVertex.y = spoke1d_y_end;
+    sharedVertex.z = spoke1d_z_end;
 
 }

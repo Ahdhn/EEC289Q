@@ -4,6 +4,7 @@
 #include <curand_kernel.h>
 #include <stdio.h>
 #include <math.h>
+#include <cfloat>
 #define _tol 10E-6
 
 typedef float real; //Change this between double or (float) single precision
@@ -45,19 +46,26 @@ __device__  __forceinline__ real generateRAND(curandState* globalState, int ind)
 	//return value
 	return rndval;
 }
+__device__ __forceinline__ void NormalizeVector(real&vector_x, real&vector_y, real&vector_z){
+	//Normalize an input vector 
+	
+	//real nn = rnorm3df(vector_x, vector_y, vector_z);//1/sqrt(vector_x^2 + vector_y^2 + vector_z^2)	
+	real nn = sqrt(vector_x*vector_x + vector_y*vector_y + vector_z*vector_z);
+	vector_x *= nn; vector_y *= nn; vector_z *= nn;
+}
 __device__ __forceinline__ void CrossProdcut(const real xv1, const real yv1, const real zv1, //Input:Vector 1
 	                                         const real xv2, const real yv2, const real zv2, //Input:Vector 2
-	                                         real&xx, real&yy, real&zz                       //Output:Vector 3
-	                                        ){
+	                                         real&xx, real&yy, real&zz){                     //Output:Vector 3
+	                                        
 	//Find the cross product between vector 1 and vectro 2
 	xx = yv1*zv2 - zv1*yv2;
 	yy = zv1*xv2 - xv1*zv2;
 	zz = xv1*yv2 - yv1*xv2;
 
 }
-__device__ __forceinline__ real DotProdcut(const real xv1, const real yv1, const real zv1, //Input:Vector 1
-	                                       const real xv2, const real yv2, const real zv2  //Input:Vector 2
-									 	   ){
+__device__ __forceinline__ real DotProdcut(const real xv1, const real yv1, const real zv1,  //Input:Vector 1
+	                                       const real xv2, const real yv2, const real zv2){ //Input:Vector 2
+									 	   
 	//Dot product of two vectors 
 	return xv1*xv2 + yv1*yv2 + zv1*zv2;
 
@@ -66,16 +74,16 @@ __device__ __forceinline__ real DotProdcut(const real xv1, const real yv1, const
 __device__ __forceinline__ void RandSpoke1D(const real x,const real y, const real z,        //Input: starting point of the spoke
 	                                        const real xn1, const real yn1, const real zn1, //Input: normal to the plane 1 
 											const real xn2, const real yn2, const real zn2, //Input: normal to the plane 2 
-	                                        real&xv, real&yv, real&zv,                       //Output: direction of the spoke 
-	                                        curandState* globalState, int randID       //global state for rand generate 
-											){
+	                                        real&xv, real&yv, real&zv,                      //Output: direction of the spoke (normalized)
+	                                        curandState* globalState, int randID){          //Input: global state for rand generate 
+											
 
 	//Random spoke sampling along a 1D line defined by the intersection
 	//of two planes (plane 1 and plane 2)
 	//spoke starting point should be on the 1D line (not checked)
 	//the two planes are defined by their normal vectors
 
-	real xv_per, yv_per, zv_per;//the perpenduclar vector of the two input vectors (the direction over which we gonna sample)
+	
 	CrossProdcut(xn1, yn1, zn1, xn2, yn2, zn2, xv, yv, zv);
 
 	
@@ -87,6 +95,7 @@ __device__ __forceinline__ void RandSpoke1D(const real x,const real y, const rea
 		zv *=-1;
 	}
 
+	NormalizeVector(xv, yv, zv);
 	//testing 
 	/*real dot1 = DotProdcut(xv,yv,zv, xn1,yn1,zn1);
 	real dot2 = DotProdcut(xv,yv,zv, xn2,yn2,zn2);
@@ -95,9 +104,9 @@ __device__ __forceinline__ void RandSpoke1D(const real x,const real y, const rea
 }
 __device__ __forceinline__ void RandSpoke2D(const real x,const real y, const real z,     //Input: starting point of the spoke
 	                                        const real xn, const real yn, const real zn, //Input: normal to the plane  
-	                                        real&xv, real&yv, real&zv,                    //Output: direction of the spoke 
-	                                        curandState* globalState, int randID       //global state for rand generate 
-											){
+	                                        real&xv, real&yv, real&zv,                   //Output: direction of the spoke (normalized)
+	                                        curandState* globalState, int randID){       //Input: global state for rand generate 
+											
 	//Random spoke sampling in a 2D plane embedded in the 3D domain
 	//spoke starting point should be on the 2D plane 
 	//The 2d plane is defined by its normal vector
@@ -112,6 +121,8 @@ __device__ __forceinline__ void RandSpoke2D(const real x,const real y, const rea
 
 	CrossProdcut(xn, yn, zn, Vx_rand, Vy_rand, Vz_rand, xv, yv, zv);
 
+	NormalizeVector(xv, yv, zv);
+
 	//testing 
 	/*real dot = DotProdcut(xv,yv,zv, xn,yn,zn);
 	printf("\n Vx_rand= %f, Vy_rand= %f, Vz_rand= %f",Vx_rand, Vy_rand, Vz_rand);
@@ -125,22 +136,24 @@ __device__ __forceinline__ void RandSpoke2D(const real x,const real y, const rea
 	
 }
 __device__ __forceinline__ void RandSpoke3D(const real x, const  real y, const real z, //Input: starting point of the spoke
-	                                        real&xv, real&yv, real&zv,                 //Output: direction of the spoke 
-											curandState* globalState, int randID       //global state for rand generate 
-											){
+	                                        real&xv, real&yv, real&zv,                 //Output: direction of the spoke (normalized)
+											curandState* globalState, int randID){     //Input: global state for rand generate 
+											
 	//Random spoke sampling in the 3d domain; there is no constraints at all
 		
 	xv = generateRAND(globalState, randID);
 	yv = generateRAND(globalState, randID);
 	zv = generateRAND(globalState, randID);
 
+	NormalizeVector(xv, yv, zv);
+
 	//printf("\n xv= %f, yv= %f, zv= %f\n", xv, yv, zv);
 }
 
 __device__ __forceinline__ bool SpokePlaneIntersect(const real pp_x, const real pp_y, const real pp_z, const real pv_x,  const real pv_y,  const real pv_z,  //Input: plane (point, normal vector)
 	                                                const real pt_x, const real pt_y, const real pt_z, const real sp_v_x, const real sp_v_y, const real sp_v_z, //Input: spoke (point and vector)
-	                                                real&point_x, real&point_y, real&point_z //Output: point
-									 			   ){
+	                                                real&point_x, real&point_y, real&point_z){ //Output: point
+									 			   
 	//Plane line intersection. Plane define by normal vector (pv_x,pv_y,pv_z) and point on it(pp_x,pp_y,pp_z)
 	// and line between point ip1 and ip2
 	
@@ -164,3 +177,26 @@ __device__ __forceinline__ bool SpokePlaneIntersect(const real pp_x, const real 
 	return true;
 
 }
+
+
+__device__ __forceinline__ bool SpokePlaneTrimming(const real pp_x, const real pp_y, const real pp_z, const real pv_x,  const real pv_y,  const real pv_z,  //Input: plane (point, normal vector)
+	                                               const real pt_x_st, const real pt_y_st, const real pt_z_st, real&pt_x_end, real&pt_y_end, real&pt_z_end){ //Input: spoke (starting and end point)
+	                                               
+
+	//Trim the spoke by the plane, 
+	//Return the trimmed spoke; only the end point of the spoke is allowed to be change 
+	 const real sp_v_x = pt_x_end - pt_x_st;
+	 const real sp_v_y = pt_y_end - pt_y_st; 
+	 const real sp_v_z = pt_z_end - pt_z_st; 
+
+	 real point_x(0), point_y(0), point_z(0);
+	 if(SpokePlaneIntersect(pp_x,pp_y, pp_z, pv_x, pv_y, pv_z, pt_x_st, pt_y_st, pt_z_st, sp_v_x, sp_v_y, sp_v_z, point_x, point_y, point_z)){
+	 	pt_x_end = point_x;
+	 	pt_y_end = point_y;
+	 	pt_z_end = point_z;
+	 	return true;
+	 }else{
+	 	return false;
+	 }
+}
+

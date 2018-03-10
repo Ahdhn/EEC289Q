@@ -6,7 +6,7 @@ all: $(objects)
 	nvcc $(NVCC_OPTIONS) $(INCLUDES) -o rsd.out	RSD3d.o kdtree.o
 RSD3d.o: RSD3d.cu *.cu
 	nvcc $(NVCC_OPTIONS) $(INCLUDES) -c RSD3d.cu -o RSD3d.o
-kdtree.o: kdtree.cpp kdtree.h
+kdtree.o: kdtree.cpp
 	nvcc $(NVCC_OPTIONS) $(INCLUDES) -c kdtree.cpp -o kdtree.o
 clean:
 	rm -f *.o *.out
