@@ -50,7 +50,7 @@ __device__ __forceinline__ void NormalizeVector(real&vector_x, real&vector_y, re
 	//Normalize an input vector 
 	
 	//real nn = rnorm3df(vector_x, vector_y, vector_z);//1/sqrt(vector_x^2 + vector_y^2 + vector_z^2)	
-	real nn = sqrt(vector_x*vector_x + vector_y*vector_y + vector_z*vector_z);
+	real nn = real(1)/sqrtf(vector_x*vector_x + vector_y*vector_y + vector_z*vector_z);
 	vector_x *= nn; vector_y *= nn; vector_z *= nn;
 }
 __device__ __forceinline__ void CrossProdcut(const real xv1, const real yv1, const real zv1, //Input:Vector 1
