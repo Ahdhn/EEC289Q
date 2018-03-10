@@ -1,3 +1,5 @@
+#pragma once
+
 #include "spokes.cu"
 #include <stdint.h>
 

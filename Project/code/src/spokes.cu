@@ -200,3 +200,66 @@ __device__ __forceinline__ bool SpokePlaneTrimming(const real pp_x, const real p
 	 }
 }
 
+
+__device__ __forceinline__ real TriCircumcenter3d(real xa, real ya, real za,
+	                                              real xb, real yb, real zb,
+	                                              real xc, real yc, real zc,
+	                                              real&x_cir, real&y_cir, real&z_cir){
+	
+	//http://www.ics.uci.edu/~eppstein/junkyard/circumcenter.html 
+	//http://gamedev.stackexchange.com/questions/60630/how-do-i-find-the-circumcenter-of-a-triangle-in-3d
+	real xba, yba, zba, xca, yca, zca;
+	real balength, calength;
+	real xcrossbc, ycrossbc, zcrossbc;
+	real denominator;
+	real xcirca, ycirca, zcirca;
+
+	xba = xb - xa;
+	yba = yb - ya;
+	zba = zb - za;
+	xca = xc - xa;
+	yca = yc - ya;
+	zca = zc - za;
+	
+	balength = xba * xba + yba * yba + zba * zba;
+	calength = xca * xca + yca * yca + zca * zca;
+
+	xcrossbc = yba * zca - yca * zba;
+	ycrossbc = zba * xca - zca * xba;
+	zcrossbc = xba * yca - xca * yba;
+
+	denominator = real(0.5) / (xcrossbc * xcrossbc + ycrossbc * ycrossbc + zcrossbc * zcrossbc);
+
+	xcirca = ((balength * yca - calength * yba) * zcrossbc - (balength * zca - calength * zba) * ycrossbc) * denominator;
+	ycirca = ((balength * zca - calength * zba) * xcrossbc - (balength * xca - calength * xba) * zcrossbc) * denominator;
+	zcirca = ((balength * xca - calength * xba) * ycrossbc - (balength * yca - calength * yba) * xcrossbc) * denominator;
+	x_cir = xcirca + xa;
+	y_cir = ycirca + ya;
+	z_cir = zcirca + za;
+	
+	real len1, dx, dy, dz;
+	dx = xa - x_cir;
+	dy = ya - y_cir;
+	dz = za - z_cir;
+	len1 = dx*dx + dy*dy + dz*dz;
+	
+#ifdef  debug
+	dx = xb - x_cir;
+	dy = yb - y_cir;
+	dz = zb - z_cir;
+	real len2 = dx*dx + dy*dy + dz*dz;
+
+	dx = xc - x_cir;
+	dy = yc - y_cir;
+	dz = zc - z_cir;
+	real len3 = dx*dx + dy*dy + dz*dz;
+
+	if (fabs(len1 - len2)>_tol || fabs(len3 - len2)>_tol || fabs(len1 - len3)>_tol){
+		printf("\nError at TriCircumcenter3d()..!!\n");	
+	}
+#endif
+
+	return len1;
+
+
+}
