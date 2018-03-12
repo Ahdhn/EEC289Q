@@ -3,8 +3,7 @@
 
 #include <curand_kernel.h>
 #include <stdio.h>
-#include <math.h>
-#include <cfloat>
+
 #define _tol 10E-6
 
 typedef float real; //Change this between double or (float) single precision
@@ -20,7 +19,7 @@ struct real3
 };
 
 template <typename T>
-inline T Dist(T x1, T y1, T z1, T x2, T y2, T z2){
+__device__  __forceinline__ T cuDist(T x1, T y1, T z1, T x2, T y2, T z2){
 	//square distance between point (x1,y1,z1) and (x2,y2,z2) 
 	T dx, dy, dz;
 	dx = x1 - x2;
@@ -71,6 +70,24 @@ __device__ __forceinline__ real DotProdcut(const real xv1, const real yv1, const
 
 }
 
+__device__ __forceinline__ void ProjectPointOntoPlane(const real point_x, const real point_y, const real point_z, //Input: Point to project
+	                                                  const real normal_dx, const real normal_dy, const real normal_dz, //Input: normal to the plan
+	                                                  const real orig_x, const real orig_y, const real orig_z,  //Input: point on the plane 
+	                                                  real&projected_x, real&projected_y, real&projected_z){//Output: projected point 
+
+	//return the ortho distance to the plane 
+	//http://stackoverflow.com/questions/9605556/how-to-project-a-3d-point-to-a-3d-plane
+
+	real point_orig_x(point_x - orig_x), point_orig_y(point_y - orig_y), point_orig_z(point_z - orig_z);
+	//NormalizeVector(point_orig_x, point_orig_y, point_orig_z);
+	real dot1 = DotProdcut(point_orig_x, point_orig_y, point_orig_z, normal_dx, normal_dy, normal_dz);
+	projected_x = point_x - dot1*normal_dx;
+	projected_y = point_y - dot1*normal_dy;
+	projected_z = point_z - dot1*normal_dz;
+
+	//return sqrtf(cuDist(projected_x, projected_y, projected_z, point_x, point_y, point_z));
+}
+
 __device__ __forceinline__ void RandSpoke1D(const real x,const real y, const real z,        //Input: starting point of the spoke
 	                                        const real xn1, const real yn1, const real zn1, //Input: normal to the plane 1 
 											const real xn2, const real yn2, const real zn2, //Input: normal to the plane 2 
@@ -111,28 +128,36 @@ __device__ __forceinline__ void RandSpoke2D(const real x,const real y, const rea
 	//spoke starting point should be on the 2D plane 
 	//The 2d plane is defined by its normal vector
 
-	//Algorithm: generate random vector in 3d. The cross product of
-	//this random vector with (xn,yn,zn) will give a vector perpendiuclar 
-	//to (xn,yn,zn). The returned spoke has the same starting point 
-	//(x,y,z) 
+	//Algorithm: throw random point in the space, then project it
+	//to the plane, return the direction as the ray starting from (x,y,z)
+	//and pointing to the projected point 
+
 	real Vx_rand = generateRAND(globalState, randID);	
 	real Vy_rand = generateRAND(globalState, randID);
 	real Vz_rand = generateRAND(globalState, randID);
+	
 
-	CrossProdcut(xn, yn, zn, Vx_rand, Vy_rand, Vz_rand, xv, yv, zv);
+	ProjectPointOntoPlane(Vx_rand, Vy_rand, Vz_rand,
+	                      xn, yn,zn,
+	                      x,y,z,
+	                      xv,yv,zv);
 
-	NormalizeVector(xv, yv, zv);
+	//printf("\n xv= %f, yv= %f, zv= %f",xv, yv, zv);
+
+	xv -=x;
+	yv -=y;
+	zv -=z;
+	//NormalizeVector(xv, yv, zv);
 
 	//testing 
-	/*real dot = DotProdcut(xv,yv,zv, xn,yn,zn);
-	printf("\n Vx_rand= %f, Vy_rand= %f, Vz_rand= %f",Vx_rand, Vy_rand, Vz_rand);
+	//real dot = DotProdcut(xv,yv,zv, xn,yn,zn);
+	//printf("\n RandSpoke2D() DOT= %f", dot);
+	/*printf("\n Vx_rand= %f, Vy_rand= %f, Vz_rand= %f",Vx_rand, Vy_rand, Vz_rand);
 	printf("\n \n xn= %f, yn= %f, zn= %f \n xv= %f, yv= %f, zv= %f",
 		          xn,     yn,     zn,       xv,     yv,     zv);
 	printf("\n dot =%f\n",dot );
 	printf("\n px =%f, py =%f, pz =%f\n", x+0.2*xn, y+0.2*yn, z+0.2*zn);
 	printf("\n qx =%f, qy =%f, qz =%f\n", x+0.2*xv, y+0.2*yv, z+0.2*zv);*/
-
-	
 	
 }
 __device__ __forceinline__ void RandSpoke3D(const real x, const  real y, const real z, //Input: starting point of the spoke

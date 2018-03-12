@@ -1,5 +1,7 @@
+#pragma once
 //construct the circumsphere of four points in 3d 
 #include "spokes.cu"
+#include "utilities.h"
 #include <stdio.h>
 
 inline real Determinant3(real A[4][4])

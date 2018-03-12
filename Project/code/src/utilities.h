@@ -1,3 +1,4 @@
+#pragma once
 static void HandleError(cudaError_t err, const char *file, int line) {
 	//Error handling micro, wrap it around function whenever possible
 	if (err != cudaSuccess) {
@@ -156,4 +157,16 @@ void BuildNeighbors(kdtree&tree, size_t NumPoints, uint32_t*& h_neighbors, size_
 		if (h_neighbors[start] > offset - 1)
 			printf("Error! in line %i.\n", __LINE__);
 	}
+}
+template <typename T>
+inline T Dist(T x1, T y1, T z1, T x2, T y2, T z2){
+	//square distance between point (x1,y1,z1) and (x2,y2,z2) 
+	T dx, dy, dz;
+	dx = x1 - x2;
+	dy = y1 - y2;
+	dz = z1 - z2;
+	dx *= dx;
+	dy *= dy;
+	dz *= dz;
+	return dx + dy + dz;
 }

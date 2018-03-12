@@ -1,3 +1,4 @@
+#pragma once
 //Validate the correctness of the constructed delaunay 
 //TODO make sure everything is going as meant to be (after testing extractTets)
 
@@ -7,6 +8,7 @@
 
 #include "spokes.cu"
 #include "circumSphere.h"
+#include "utilities.h"
 
 bool insideCircumSphere(const uint32_t p, const real r_circm, const real x_cirm, const real y_cirm, const real z_cirm,
 	                    uint32_t*const h_neighbors, real3*const Points, const int MaxOffset,
