@@ -83,7 +83,7 @@ __device__ __forceinline__ void ProjectPointOntoPlane(const real point_x, const 
 	real dot1 = DotProdcut(point_orig_x, point_orig_y, point_orig_z, normal_dx, normal_dy, normal_dz);
 	projected_x = point_x - dot1*normal_dx;
 	projected_y = point_y - dot1*normal_dy;
-	projected_z = point_z - dot1*normal_dz;
+	projected_z = point_z - dot1*normal_dz; 
 
 	//return sqrtf(cuDist(projected_x, projected_y, projected_z, point_x, point_y, point_z));
 }
@@ -138,16 +138,13 @@ __device__ __forceinline__ void RandSpoke2D(const real x,const real y, const rea
 	
 
 	ProjectPointOntoPlane(Vx_rand, Vy_rand, Vz_rand,
-	                      xn, yn,zn,
-	                      x,y,z,
+	                      xn, yn,zn,	                      
+	                      x,y,z,	                      
 	                      xv,yv,zv);
-
-	//printf("\n xv= %f, yv= %f, zv= %f",xv, yv, zv);
-
 	xv -=x;
 	yv -=y;
-	zv -=z;
-	//NormalizeVector(xv, yv, zv);
+	zv -=z;		
+	NormalizeVector(xv, yv, zv);	
 
 	//testing 
 	//real dot = DotProdcut(xv,yv,zv, xn,yn,zn);
