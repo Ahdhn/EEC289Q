@@ -24,6 +24,14 @@
 #include "extractTets.h"
 #include "circumSphere.h"
 
+#ifdef _WIN32
+#define DEVICE_ID 0
+#else
+#define DEVICE_ID 3
+#endif
+
+
+
 __global__ void initialise_curand_on_kernels(curandState * state, unsigned long seed)
 {
 	//stolen from https://nidclip.wordpress.com/2014/04/02/cuda-random-number-generation/
@@ -34,9 +42,9 @@ __global__ void initialise_curand_on_kernels(curandState * state, unsigned long 
 
 int main(int argc, char**argv){
 	//0) Generate the input points
-	//PointsGen("../data/small.txt", 1000);
+	PointsGen("../data/tiny.txt", 100);
 
-	DeviceQuery(3);
+	DeviceQuery(DEVICE_ID);
 	
 
 	//1) Read input set of points
@@ -62,15 +70,41 @@ int main(int argc, char**argv){
 	}
 	file.close();
 	
+	bool * h_bMarkers = new bool[NumPoints];
+	uint32_t * h_triangluate = new uint32_t[NumPoints];
+	uint32_t NumTriangultePoints = 0;
+	for (int i = 0; i<NumPoints; i++)
+	{
+		h_bMarkers[i] = 1;
+		// boundary
+		if (Points[i].x < 0.0) continue;
+		if (Points[i].y < 0.0) continue;
+		if (Points[i].z < 0.0) continue;
+		if (Points[i].x > 1.0) continue;
+		if (Points[i].y > 1.0) continue;
+		if (Points[i].z > 1.0) continue;
+		h_bMarkers[i] = 0;
+		h_triangluate[NumTriangultePoints++] = i;
+	}
+
 
 	//3) Move Data to GPU
 	real3* d_points = NULL; uint32_t* d_neighbors = NULL; uint32_t* d_delaunay = NULL;
+	uint32_t * d_triangluate; bool * d_bMarkers;
+
 	HANDLE_ERROR(cudaMalloc((void**)&d_delaunay, NumPoints * MaxOffset * sizeof(uint32_t)));
 	HANDLE_ERROR(cudaMalloc((void**)&d_points, NumPoints * sizeof(real3)));
 	HANDLE_ERROR(cudaMemcpy(d_points, Points, NumPoints * sizeof(real3), cudaMemcpyHostToDevice));	
 	HANDLE_ERROR(cudaMalloc((void**)&d_neighbors, NumPoints * MaxOffset * sizeof(uint32_t)));
 	HANDLE_ERROR(cudaMemcpy(d_neighbors, h_neighbors, NumPoints * MaxOffset * sizeof(uint32_t), cudaMemcpyHostToDevice));
 	
+	//boundary + to triangulate
+	HANDLE_ERROR(cudaMalloc((void**)&d_triangluate, NumTriangultePoints * sizeof(uint32_t)));
+	HANDLE_ERROR(cudaMemcpy(d_triangluate, h_triangluate, NumTriangultePoints * sizeof(uint32_t), cudaMemcpyHostToDevice));
+
+	HANDLE_ERROR(cudaMalloc((void**)&d_bMarkers, NumPoints * sizeof(bool)));
+	HANDLE_ERROR(cudaMemcpy(d_bMarkers, h_bMarkers, NumPoints * sizeof(bool), cudaMemcpyHostToDevice));
+
 	//3.5) initialize rand number generator 
 	//srand(time(NULL));
 	curandState* deviceStates = NULL;
@@ -81,7 +115,9 @@ int main(int argc, char**argv){
 
 
 	//4) Launch kernels and record time
-	RSD_Imp << <1, NumPoints >> > (d_points, d_neighbors, NumPoints, d_delaunay, MaxOffset, deviceStates);
+	RSD_Imp << <1, NumPoints >> > (d_points, d_neighbors, NumPoints, d_delaunay, MaxOffset, deviceStates,
+		d_triangluate,d_bMarkers, NumTriangultePoints);
+
 	HANDLE_ERROR(cudaGetLastError());
 	HANDLE_ERROR(cudaDeviceSynchronize());
 
@@ -100,10 +136,17 @@ int main(int argc, char**argv){
 	cudaFree(d_points);
 	cudaFree(d_neighbors);
 	cudaFree(d_delaunay);
+	
+	cudaFree(d_triangluate);
+	cudaFree(d_bMarkers);
 	//cudaFree(deviceStates);
 
 	delete[] Points;
 	delete[] h_neighbors;
 	delete[] h_delaunay;
+
+	delete[] h_triangluate;
+	delete[] h_bMarkers;
+
 	return 0;
 }

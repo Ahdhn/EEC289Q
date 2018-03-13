@@ -16,9 +16,14 @@ void PointsGen(std::string FileName, int Num){
 	file << Num << std::endl;
 
 	for (int v = 0; v < Num; v++){
-		file << double(rand()) / double(RAND_MAX) << " " <<
-			double(rand()) / double(RAND_MAX) << " " <<
-			double(rand()) / double(RAND_MAX) << std::endl;
+
+		double randX = double(rand()) / double(RAND_MAX) * 2.0 - 1.0;
+		double randY = double(rand()) / double(RAND_MAX) * 2.0 - 1.0;
+		double randZ = double(rand()) / double(RAND_MAX) * 2.0 - 1.0;
+
+		file << randX << " " <<
+			randY << " " <<
+			randZ << std::endl;
 	}
 	file.close();
 }
