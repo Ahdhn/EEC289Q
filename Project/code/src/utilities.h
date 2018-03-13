@@ -27,6 +27,21 @@ void PointsGen(std::string FileName, int Num){
 	}
 	file.close();
 }
+
+void SaveNodePoints(std::string FileName, int Num, real3* Points){
+
+	std::fstream file(FileName.c_str(), std::ios::out);
+	file.precision(30);
+	file << Num << "	" << "3 0 0" << std::endl;
+
+	for (int v = 0; v < Num; v++){
+		file << v + 1 << "	" <<
+			Points[v].x << "	" <<
+			Points[v].y << "	" <<
+			Points[v].z << std::endl;
+	}
+	file.close();
+}
 void DeviceQuery(int dev = 0){
 
 	//Display few releven information about the device
