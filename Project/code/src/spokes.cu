@@ -19,7 +19,7 @@ struct real3
 };
 
 template <typename T>
-__device__  __forceinline__ T cuDist(T x1, T y1, T z1, T x2, T y2, T z2){
+__device__ __host__  __forceinline__ T cuDist(T x1, T y1, T z1, T x2, T y2, T z2){
 	//square distance between point (x1,y1,z1) and (x2,y2,z2) 
 	T dx, dy, dz;
 	dx = x1 - x2;

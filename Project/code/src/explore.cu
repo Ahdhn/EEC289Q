@@ -19,7 +19,7 @@ __device__ __forceinline__ uint32_t NeighbourTriming(const real x_vertex, const 
 	//loop over the neighbour of my vertex (neighbour_count) and trim the input spoke 
 	//using Voronoi planes, 
 	//return the trimmed spoke, the neighbour that trimmed it the shortest 
-	uint32_t trimming_neighbour;
+	uint32_t trimming_neighbour = UINT32_MAX;
 
 	for(uint32_t i=1; i<= neighbour_count; i++){
 		uint32_t myNeighbour = d_neighbors[base + i];
@@ -39,7 +39,7 @@ __device__ __forceinline__ uint32_t NeighbourTriming(const real x_vertex, const 
 
 		if(SpokePlaneTrimming(mid_x, mid_y, mid_z, norm_p_x, norm_p_y, norm_p_z, //trimming plane 
 			                  spoke3d_x_st, spoke3d_y_st, spoke3d_z_st, spoke3d_x_end, spoke3d_y_end, spoke3d_z_end) //spoke
-			                  ){
+			                  ){			
 			trimming_neighbour = myNeighbour;
 			trimmingN_x = x_neighbour;
 			trimmingN_y = y_neighbour;
@@ -67,26 +67,32 @@ __device__ __forceinline__ uint32_t ThreeDSpoking(const uint32_t VertexID, //Inp
 	//grandparent is the neighnour that will trim the spoke the shortest 
 
 	//We use the spoke end as a proxy for direction here and then set the end point correctly after that
+	uint32_t grandparent = UINT32_MAX;
+
+	while(grandparent == UINT32_MAX){
+
 	RandSpoke3D(spoke3d_x_st, spoke3d_y_st, spoke3d_z_st, spoke3d_x_end, spoke3d_y_end, spoke3d_z_end, globalState, randID);
 	
-	spoke3d_x_end = spoke3d_x_st + 1000*spoke3d_x_end;
-	spoke3d_y_end = spoke3d_y_st + 1000*spoke3d_y_end;
-	spoke3d_z_end = spoke3d_z_st + 1000*spoke3d_z_end;
+		spoke3d_x_end = spoke3d_x_st + 1000*spoke3d_x_end;
+		spoke3d_y_end = spoke3d_y_st + 1000*spoke3d_y_end;
+		spoke3d_z_end = spoke3d_z_st + 1000*spoke3d_z_end;
 
-	//printf("\n 1) spoke3d_end( %f,%f,%f )", spoke3d_x_end, spoke3d_y_end, spoke3d_z_end);
+		//printf("\n 1) spoke3d_end( %f,%f,%f )", spoke3d_x_end, spoke3d_y_end, spoke3d_z_end);
 	
-	uint32_t grandparent;
-	grandparent = NeighbourTriming(x_vertex, y_vertex, z_vertex,
-		                           spoke3d_x_st, spoke3d_y_st, spoke3d_z_st, 
-		                           spoke3d_x_end, spoke3d_y_end, spoke3d_z_end,
-		                           grandparent_x, grandparent_y, grandparent_z,
-		                           VertexID, VertexID, VertexID, VertexID,
-		                           neighbour_count, base, d_neighbors, d_points);
+	
+		grandparent = NeighbourTriming(x_vertex, y_vertex, z_vertex,
+		    	                       spoke3d_x_st, spoke3d_y_st, spoke3d_z_st, 
+			                           spoke3d_x_end, spoke3d_y_end, spoke3d_z_end,
+		        	                   grandparent_x, grandparent_y, grandparent_z,
+		            	               VertexID, VertexID, VertexID, VertexID,
+		                	           neighbour_count, base, d_neighbors, d_points);
 
-	/*printf("\n 2) spoke3d_end( %f,%f,%f )", spoke3d_x_end, spoke3d_y_end, spoke3d_z_end);
-	printf("\n grandparent( %f,%f,%f )", grandparent_x, grandparent_y, grandparent_z);
-	printf("\n 3dspoke_plan( %f,%f,%f, %f,%f,%f )\n", grandparent_x - x_vertex, grandparent_y- y_vertex , grandparent_z- z_vertex, 
-		(grandparent_x + x_vertex)/2.0, (grandparent_y + y_vertex)/2.0 , (grandparent_z + z_vertex)/2.0);*/
+		//if(grandparent == UINT32_MAX){printf(" Invalid grand\n");}
+		/*printf("\n 2) spoke3d_end( %f,%f,%f )", spoke3d_x_end, spoke3d_y_end, spoke3d_z_end);
+		printf("\n grandparent( %f,%f,%f )", grandparent_x, grandparent_y, grandparent_z);
+		printf("\n 3dspoke_plan( %f,%f,%f, %f,%f,%f )\n", grandparent_x - x_vertex, grandparent_y- y_vertex , grandparent_z- z_vertex, 
+			(grandparent_x + x_vertex)/2.0, (grandparent_y + y_vertex)/2.0 , (grandparent_z + z_vertex)/2.0);*/
+	}
 	
 
 	return grandparent;
@@ -114,31 +120,35 @@ __device__ __forceinline__ uint32_t TwoDSpoking(const uint32_t VertexID, //Input
 	real norm_p_z = grandparent_z - z_vertex;
 	NormalizeVector(norm_p_x, norm_p_y, norm_p_z);
 
-	//We use the spoke end as a proxy for direction here and then set the end point correctly after that
-	RandSpoke2D(spoke2d_x_st, spoke2d_y_st, spoke2d_z_st, //2D spoke starting point 
-		        norm_p_x, norm_p_y, norm_p_z, //normal to the plane 
-		        spoke2d_x_end, spoke2d_y_end, spoke2d_z_end, //2d spoke direction 
-		        globalState, randID);
+	uint32_t parent = UINT32_MAX; 
 
-	spoke2d_x_end = spoke2d_x_st + 1000*spoke2d_x_end;
-	spoke2d_y_end = spoke2d_y_st + 1000*spoke2d_y_end;
-	spoke2d_z_end = spoke2d_z_st + 1000*spoke2d_z_end;
+	while (parent == UINT32_MAX){
+		//We use the spoke end as a proxy for direction here and then set the end point correctly after that
+		RandSpoke2D(spoke2d_x_st, spoke2d_y_st, spoke2d_z_st, //2D spoke starting point 
+			        norm_p_x, norm_p_y, norm_p_z, //normal to the plane 
+		    	    spoke2d_x_end, spoke2d_y_end, spoke2d_z_end, //2d spoke direction 
+		        	globalState, randID);
+
+		spoke2d_x_end = spoke2d_x_st + 1000*spoke2d_x_end;
+		spoke2d_y_end = spoke2d_y_st + 1000*spoke2d_y_end;
+		spoke2d_z_end = spoke2d_z_st + 1000*spoke2d_z_end;
 	
 
-	//printf("\n 1) spoke2d_end( %f,%f,%f )", spoke2d_x_end, spoke2d_y_end, spoke2d_z_end);
+		//printf("\n 1) spoke2d_end( %f,%f,%f )", spoke2d_x_end, spoke2d_y_end, spoke2d_z_end);
 
-	uint32_t parent;	
-	parent = NeighbourTriming(x_vertex, y_vertex, z_vertex, 
-							  spoke2d_x_st, spoke2d_y_st, spoke2d_z_st, 
-		                      spoke2d_x_end, spoke2d_y_end, spoke2d_z_end,
-		                      parent_x, parent_y, parent_z,
-		                      VertexID, grandparent, VertexID, VertexID, 
-		                      neighbour_count, base, d_neighbors, d_points);
-
-	/*printf("\n 2) spoke2d_end( %f,%f,%f )", spoke2d_x_end, spoke2d_y_end, spoke2d_z_end);
-	printf("\n parent( %f,%f,%f )", parent_x, parent_y, parent_z);
-	printf("\n 2dspoke_plan( %f,%f,%f, %f,%f,%f )\n", parent_x - x_vertex, parent_y- y_vertex , parent_z- z_vertex, 
-		(parent_x + x_vertex)/2.0, (parent_y + y_vertex)/2.0 , (parent_z + z_vertex)/2.0);*/
+	
+		parent = NeighbourTriming(x_vertex, y_vertex, z_vertex, 
+								  spoke2d_x_st, spoke2d_y_st, spoke2d_z_st, 
+		    	                  spoke2d_x_end, spoke2d_y_end, spoke2d_z_end,
+		        	              parent_x, parent_y, parent_z,
+		            	          VertexID, grandparent, VertexID, VertexID, 
+		                	      neighbour_count, base, d_neighbors, d_points);
+		//if(parent == UINT32_MAX){printf(" Invalid parent\n");}
+		/*printf("\n 2) spoke2d_end( %f,%f,%f )", spoke2d_x_end, spoke2d_y_end, spoke2d_z_end);
+		printf("\n parent( %f,%f,%f )", parent_x, parent_y, parent_z);
+		printf("\n 2dspoke_plan( %f,%f,%f, %f,%f,%f )\n", parent_x - x_vertex, parent_y- y_vertex , parent_z- z_vertex, 
+			(parent_x + x_vertex)/2.0, (parent_y + y_vertex)/2.0 , (parent_z + z_vertex)/2.0);*/
+	}
 
 	return parent;
 }
@@ -173,36 +183,36 @@ __device__ __forceinline__ uint32_t OneDSpoking(const uint32_t VertexID, //Input
 
 	NormalizeVector(norm_p2_x,norm_p2_y,norm_p2_z);
 
-	RandSpoke1D(spoke1d_x_st, spoke1d_y_st, spoke1d_z_st,
-	            norm_p1_x, norm_p1_y, norm_p1_z,
-	            norm_p2_x, norm_p2_y, norm_p2_z,
-	            spoke1d_x_end, spoke1d_y_end, spoke1d_z_end,
-	            globalState, randID);
+	uint32_t child = UINT32_MAX; 
 
-	spoke1d_x_end = spoke1d_x_st + 1000*spoke1d_x_end;
-	spoke1d_y_end = spoke1d_y_st + 1000*spoke1d_y_end;
-	spoke1d_z_end = spoke1d_z_st + 1000*spoke1d_z_end;	
+	while(child == UINT32_MAX){
+		RandSpoke1D(spoke1d_x_st, spoke1d_y_st, spoke1d_z_st,
+	    	        norm_p1_x, norm_p1_y, norm_p1_z,
+	            	norm_p2_x, norm_p2_y, norm_p2_z,
+	            	spoke1d_x_end, spoke1d_y_end, spoke1d_z_end,
+	            	globalState, randID);
 
-	//printf("\n 1) spoke1d_end( %f,%f,%f )", spoke1d_x_end, spoke1d_y_end, spoke1d_z_end);
+		spoke1d_x_end = spoke1d_x_st + 1000*spoke1d_x_end;
+		spoke1d_y_end = spoke1d_y_st + 1000*spoke1d_y_end;
+		spoke1d_z_end = spoke1d_z_st + 1000*spoke1d_z_end;	
 
-	uint32_t child;
-	real child_x, child_y, child_z;
-	child = NeighbourTriming(x_vertex, y_vertex, z_vertex, 
-							 spoke1d_x_st, spoke1d_y_st, spoke1d_z_st, 
-		                     spoke1d_x_end, spoke1d_y_end, spoke1d_z_end,
-		                     child_x, child_y, child_z,
-		                     VertexID, grandparent, parent, VertexID, 
-		                     neighbour_count, base, d_neighbors, d_points);
-
-	/*printf("\n 2) spoke1d_end( %f,%f,%f )", spoke1d_x_end, spoke1d_y_end, spoke1d_z_end);
-	printf("\n child( %f,%f,%f )", child_x, child_y, child_z);
-	printf("\n 1dspoke_plan( %f,%f,%f, %f,%f,%f )\n", child_x - x_vertex, child_y- y_vertex , child_z- z_vertex, 
-		(child_x + x_vertex)/2.0, (child_y + y_vertex)/2.0 , (child_z + z_vertex)/2.0);*/
-
-	return child;
-
+		//printf("\n 1) spoke1d_end( %f,%f,%f )", spoke1d_x_end, spoke1d_y_end, spoke1d_z_end);
 
 	
+		real child_x, child_y, child_z;
+		child = NeighbourTriming(x_vertex, y_vertex, z_vertex, 
+								 spoke1d_x_st, spoke1d_y_st, spoke1d_z_st, 
+		    	                 spoke1d_x_end, spoke1d_y_end, spoke1d_z_end,
+		        	             child_x, child_y, child_z,
+		            	         VertexID, grandparent, parent, VertexID, 
+		                	     neighbour_count, base, d_neighbors, d_points);
+		//if(child == UINT32_MAX){printf(" Invalid child\n");}
+		/*printf("\n 2) spoke1d_end( %f,%f,%f )", spoke1d_x_end, spoke1d_y_end, spoke1d_z_end);
+		printf("\n child( %f,%f,%f )", child_x, child_y, child_z);
+		printf("\n 1dspoke_plan( %f,%f,%f, %f,%f,%f )\n", child_x - x_vertex, child_y- y_vertex , child_z- z_vertex, 
+			(child_x + x_vertex)/2.0, (child_y + y_vertex)/2.0 , (child_z + z_vertex)/2.0);*/
+	}
+	return child;
 }
 
 //****************************************************************************************************
@@ -282,6 +292,7 @@ __device__ __forceinline__ void explore(uint32_t vertexID, //Input: vertex to ex
     
 	//Return the grandparent, parent and child as exploredID 
 	//Return the end point of the 1D spoke as sharedVertex
+	//printf("\n grandparent= %i,parent= %i, child= %i,\n",grandparent, parent, child);
 	exploredID.x = grandparent; 
     exploredID.y = parent; 
     exploredID.z = child; 

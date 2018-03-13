@@ -4,14 +4,14 @@
 #include "utilities.h"
 #include <stdio.h>
 
-inline real Determinant3(real A[4][4])
+__device__ __host__ __device__ real  Determinant3(real A[4][4])
 {
 	return A[1][1] * (A[2][2] * A[3][3] - A[3][2] * A[2][3]) -
 		   A[1][2] * (A[2][1] * A[3][3] - A[2][3] * A[3][1]) +
 		   A[1][3] * (A[2][1] * A[3][2] - A[3][1] * A[2][2]);
 
 }
-inline real Determinant4(real A[5][5])
+__device__ __host__ real Determinant4(real A[5][5])
 {
 	real A1[4][4];
 
@@ -49,11 +49,11 @@ inline real Determinant4(real A[5][5])
 //		x3(samples[ip3][0]), y3(samples[ip3][1]), z3(samples[ip3][2]),
 //		x4(samples[ip4][0]), y4(samples[ip4][1]), z4(samples[ip4][2]);
 
-inline real circumSphere(const real x1, const real y1, const real z1, 
-	                     const real x2, const real y2, const real z2,
-						 const real x3, const real y3, const real z3,
-						 const real x4, const real y4, const real z4,
-						 real&xo, real&yo, real&zo)
+__device__ __host__ real circumSphere(const real x1, const real y1, const real z1, 
+	                                  const real x2, const real y2, const real z2,
+						              const real x3, const real y3, const real z3,
+						              const real x4, const real y4, const real z4,
+						              real&xo, real&yo, real&zo)
 {
 	
 	real  M11, M12, M13, M14, M15;
@@ -106,10 +106,10 @@ inline real circumSphere(const real x1, const real y1, const real z1,
 	real rrr = xo*xo + yo*yo + zo*zo - M15 / M11;
 
 	real dist1, dist2, dist3, dist4;
-	dist1 = Dist(xo, yo, zo, x1, y1, z1);
-	dist2 = Dist(xo, yo, zo, x2, y2, z2);
-	dist3 = Dist(xo, yo, zo, x3, y3, z3);
-	dist4 = Dist(xo, yo, zo, x4, y4, z4);
+	dist1 = cuDist(xo, yo, zo, x1, y1, z1);
+	dist2 = cuDist(xo, yo, zo, x2, y2, z2);
+	dist3 = cuDist(xo, yo, zo, x3, y3, z3);
+	dist4 = cuDist(xo, yo, zo, x4, y4, z4);
 
 	if (abs(dist1 - rrr)>real(_tol) || abs(dist2 - rrr)>real(_tol) || abs(dist3 - rrr)>real(_tol) || abs(dist4 - rrr)>real(_tol)){
 		printf("\n Error 0 at Circumsphere()...\n");		

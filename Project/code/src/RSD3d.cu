@@ -22,6 +22,7 @@
 #include "RSD_imp.cu"
 #include "validate.h"
 #include "extractTets.h"
+#include "circumSphere.h"
 
 __global__ void initialise_curand_on_kernels(curandState * state, unsigned long seed)
 {
@@ -33,7 +34,7 @@ __global__ void initialise_curand_on_kernels(curandState * state, unsigned long 
 
 int main(int argc, char**argv){
 	//0) Generate the input points
-	PointsGen("../data/tiny.txt", 100);
+	//PointsGen("../data/small.txt", 1000);
 
 	DeviceQuery(3);
 	
@@ -44,6 +45,7 @@ int main(int argc, char**argv){
 	ReadPoints("../data/tiny.txt",NumPoints, Points);
 
 
+
 	//2) Build Data Structure
 	kdtree tree; 
 	uint32_t* h_neighbors;
@@ -51,7 +53,16 @@ int main(int argc, char**argv){
 	tree.bulkBuild(Points, NumPoints);
 	BuildNeighbors(tree, NumPoints, h_neighbors, MaxOffset);
 	//TestTree(tree, NumPoints);
+
+	std::fstream file("tree.csv", std::ios::out);
+	file.precision(30);
+	file<<"x coord, y coord, z coord, radius"<<std::endl;
+	for(int i=0;i<NumPoints;i++){
+		file<<Points[i].x<<", "<<Points[i].y<<", "<<Points[i].z<< ", "<< 0.001f/*+real(i)/(2.0*NumPoints)*/<<std::endl;
+	}
+	file.close();
 	
+
 	//3) Move Data to GPU
 	real3* d_points = NULL; uint32_t* d_neighbors = NULL; uint32_t* d_delaunay = NULL;
 	HANDLE_ERROR(cudaMalloc((void**)&d_delaunay, NumPoints * MaxOffset * sizeof(uint32_t)));
@@ -70,14 +81,13 @@ int main(int argc, char**argv){
 
 
 	//4) Launch kernels and record time
-	RSD_Imp << <1, 1 >> > (d_points, d_neighbors, NumPoints, d_delaunay, MaxOffset, deviceStates);
+	RSD_Imp << <1, NumPoints >> > (d_points, d_neighbors, NumPoints, d_delaunay, MaxOffset, deviceStates);
 	HANDLE_ERROR(cudaGetLastError());
 	HANDLE_ERROR(cudaDeviceSynchronize());
 
 	//5) Move results to CPU
 	uint32_t* h_delaunay = new uint32_t[NumPoints * MaxOffset];
 	HANDLE_ERROR(cudaMemcpy(h_delaunay, d_delaunay, NumPoints * MaxOffset * sizeof(uint32_t), cudaMemcpyDeviceToHost));
-
 
 	//6) Check correctness of the construction
 	std::vector<std::vector<uint32_t>> myTets = extractTets(NumPoints, h_delaunay, MaxOffset);
