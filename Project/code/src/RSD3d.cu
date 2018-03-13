@@ -115,7 +115,7 @@ int main(int argc, char**argv){
 
 
 	//4) Launch kernels and record time
-	RSD_Imp << <1, NumPoints >> > (d_points, d_neighbors, NumPoints, d_delaunay, MaxOffset, deviceStates,
+	RSD_Imp << <1, NumTriangultePoints >> > (d_points, d_neighbors, NumPoints, d_delaunay, MaxOffset, deviceStates,
 		d_triangluate,d_bMarkers, NumTriangultePoints);
 
 	HANDLE_ERROR(cudaGetLastError());
