@@ -168,7 +168,7 @@ void BuildNeighbors(kdtree&tree, size_t NumPoints, uint32_t*& h_neighbors, size_
 {
 	h_neighbors = new uint32_t[NumPoints* offset];
 	memset(h_neighbors, 0, NumPoints* offset * sizeof(uint32_t));
-	real r = real(0.4);
+	real r = real(1.0);
 	for (size_t iPoint = 0; iPoint < NumPoints; iPoint++)
 	{
 		size_t start = iPoint * offset;

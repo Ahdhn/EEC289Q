@@ -112,7 +112,7 @@ __device__ __host__ real circumSphere(const real x1, const real y1, const real z
 	dist4 = cuDist(xo, yo, zo, x4, y4, z4);
 
 	if (abs(dist1 - rrr)>real(_tol) || abs(dist2 - rrr)>real(_tol) || abs(dist3 - rrr)>real(_tol) || abs(dist4 - rrr)>real(_tol)){
-		printf("\n Error 0 at Circumsphere()...\n");		
+		printf("\n Error 0 at Circumsphere(). Difference are (%f, %f, %f, %f) \n", abs(dist1 - rrr), abs(dist2 - rrr), abs(dist3 - rrr), abs(dist4 - rrr));
 	}	
 	return rrr;
 }

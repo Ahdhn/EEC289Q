@@ -4,7 +4,7 @@ objects := RSD3d.o kdtree.o
 
 all: $(objects)
 	nvcc $(NVCC_OPTIONS) $(INCLUDES) -o rsd.out	RSD3d.o kdtree.o
-RSD3d.o: RSD3d.cu *.cu circumSphere.h explore.cu extractTets.h propagate.cu RSD_imp.cu spokes.cu utilities.h validate.h
+RSD3d.o: RSD3d.cu *.cu circumSphere.h explore.cu extractTets.h propagate.cu RSD_imp.cu spokes.cu utilities.h validate.h sortNeighbours.cu
 	nvcc $(NVCC_OPTIONS) $(INCLUDES) -c RSD3d.cu -o RSD3d.o
 kdtree.o: kdtree.cpp
 	nvcc $(NVCC_OPTIONS) $(INCLUDES) -c kdtree.cpp -o kdtree.o

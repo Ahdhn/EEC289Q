@@ -1,6 +1,7 @@
 #pragma once
 
 #include "spokes.cu"
+#include "defines.h"
 #include <stdint.h>
 
 //Everything in global memory 
@@ -87,13 +88,12 @@ __device__ __forceinline__ uint32_t ThreeDSpoking(const uint32_t VertexID, //Inp
 		            	               VertexID, VertexID, VertexID, VertexID,
 		                	           neighbour_count, base, d_neighbors, d_points);
 
-		//if(grandparent == UINT32_MAX){printf(" Invalid grand\n");}
-		/*printf("\n 2) spoke3d_end( %f,%f,%f )", spoke3d_x_end, spoke3d_y_end, spoke3d_z_end);
-		printf("\n grandparent( %f,%f,%f )", grandparent_x, grandparent_y, grandparent_z);
-		printf("\n 3dspoke_plan( %f,%f,%f, %f,%f,%f )\n", grandparent_x - x_vertex, grandparent_y- y_vertex , grandparent_z- z_vertex, 
-			(grandparent_x + x_vertex)/2.0, (grandparent_y + y_vertex)/2.0 , (grandparent_z + z_vertex)/2.0);*/
+		//if(grandparent == UINT32_MAX){printf(" Invalid grand\n");}		
 	}
-	
+	/*printf("\n 2) spoke3d_end( %f,%f,%f )", spoke3d_x_end, spoke3d_y_end, spoke3d_z_end);
+	printf("\n grandparent( %f,%f,%f )", grandparent_x, grandparent_y, grandparent_z);
+	printf("\n 3dspoke_plan( %f,%f,%f, %f,%f,%f )\n", grandparent_x - x_vertex, grandparent_y- y_vertex , grandparent_z- z_vertex, 
+			(grandparent_x + x_vertex)/2.0, (grandparent_y + y_vertex)/2.0 , (grandparent_z + z_vertex)/2.0);*/	
 
 	return grandparent;
 }
@@ -143,12 +143,12 @@ __device__ __forceinline__ uint32_t TwoDSpoking(const uint32_t VertexID, //Input
 		        	              parent_x, parent_y, parent_z,
 		            	          VertexID, grandparent, VertexID, VertexID, 
 		                	      neighbour_count, base, d_neighbors, d_points);
-		//if(parent == UINT32_MAX){printf(" Invalid parent\n");}
-		/*printf("\n 2) spoke2d_end( %f,%f,%f )", spoke2d_x_end, spoke2d_y_end, spoke2d_z_end);
-		printf("\n parent( %f,%f,%f )", parent_x, parent_y, parent_z);
-		printf("\n 2dspoke_plan( %f,%f,%f, %f,%f,%f )\n", parent_x - x_vertex, parent_y- y_vertex , parent_z- z_vertex, 
-			(parent_x + x_vertex)/2.0, (parent_y + y_vertex)/2.0 , (parent_z + z_vertex)/2.0);*/
+		//if(parent == UINT32_MAX){printf(" Invalid parent\n");}		
 	}
+	/*printf("\n 2) spoke2d_end( %f,%f,%f )", spoke2d_x_end, spoke2d_y_end, spoke2d_z_end);
+	printf("\n parent( %f,%f,%f )", parent_x, parent_y, parent_z);
+	printf("\n 2dspoke_plan( %f,%f,%f, %f,%f,%f )\n", parent_x - x_vertex, parent_y- y_vertex , parent_z- z_vertex, 
+			(parent_x + x_vertex)/2.0, (parent_y + y_vertex)/2.0 , (parent_z + z_vertex)/2.0);*/
 
 	return parent;
 }
@@ -184,7 +184,7 @@ __device__ __forceinline__ uint32_t OneDSpoking(const uint32_t VertexID, //Input
 	NormalizeVector(norm_p2_x,norm_p2_y,norm_p2_z);
 
 	uint32_t child = UINT32_MAX; 
-
+	real child_x, child_y, child_z;
 	while(child == UINT32_MAX){
 		RandSpoke1D(spoke1d_x_st, spoke1d_y_st, spoke1d_z_st,
 	    	        norm_p1_x, norm_p1_y, norm_p1_z,
@@ -199,27 +199,26 @@ __device__ __forceinline__ uint32_t OneDSpoking(const uint32_t VertexID, //Input
 		//printf("\n 1) spoke1d_end( %f,%f,%f )", spoke1d_x_end, spoke1d_y_end, spoke1d_z_end);
 
 	
-		real child_x, child_y, child_z;
+		
 		child = NeighbourTriming(x_vertex, y_vertex, z_vertex, 
 								 spoke1d_x_st, spoke1d_y_st, spoke1d_z_st, 
 		    	                 spoke1d_x_end, spoke1d_y_end, spoke1d_z_end,
 		        	             child_x, child_y, child_z,
 		            	         VertexID, grandparent, parent, VertexID, 
 		                	     neighbour_count, base, d_neighbors, d_points);
-		//if(child == UINT32_MAX){printf(" Invalid child\n");}
-		/*printf("\n 2) spoke1d_end( %f,%f,%f )", spoke1d_x_end, spoke1d_y_end, spoke1d_z_end);
-		printf("\n child( %f,%f,%f )", child_x, child_y, child_z);
-		printf("\n 1dspoke_plan( %f,%f,%f, %f,%f,%f )\n", child_x - x_vertex, child_y- y_vertex , child_z- z_vertex, 
-			(child_x + x_vertex)/2.0, (child_y + y_vertex)/2.0 , (child_z + z_vertex)/2.0);*/
+		//if(child == UINT32_MAX){printf(" Invalid child\n");}		
 	}
+	/*printf("\n 2) spoke1d_end( %f,%f,%f )", spoke1d_x_end, spoke1d_y_end, spoke1d_z_end);
+	printf("\n child( %f,%f,%f )", child_x, child_y, child_z);
+	printf("\n 1dspoke_plan( %f,%f,%f, %f,%f,%f )\n", child_x - x_vertex, child_y- y_vertex , child_z- z_vertex, 
+			(child_x + x_vertex)/2.0, (child_y + y_vertex)/2.0 , (child_z + z_vertex)/2.0);*/
 	return child;
 }
 
 //****************************************************************************************************
 __device__ __forceinline__ void explore(uint32_t vertexID, //Input: vertex to explore 
                                         real3* d_points,   //Input: all points 
-                                        uint32_t* d_neighbors, //Input: all neighbours 
-                                        const int MaxOffset,   //Input: shift in neighbour array
+                                        uint32_t* d_neighbors, //Input: all neighbours                                         
                                         curandState* globalState, int randID,  //Input: global state for rand generate 
                                         uint3&exploredID, //Output: the id of three samples connected to vertexID
                                         real3&sharedVertex){  //Output: shared voronoi vertex between exploredID                                        
@@ -230,7 +229,7 @@ __device__ __forceinline__ void explore(uint32_t vertexID, //Input: vertex to ex
 
 	//printf("\n myVertex( %f,%f,%f )\n", x_vertex, y_vertex, z_vertex);
 
-	uint32_t base = MaxOffset* vertexID;//base for index the neighbour list 
+	uint32_t base = MaxOffsets* vertexID;//base for index the neighbour list 
 	uint32_t neighbour_count = d_neighbors[base]; //number of neighbour around this vertex
 	real grandparent_x, grandparent_y, grandparent_z,
 	     parent_x, parent_y, parent_z;

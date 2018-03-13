@@ -2,12 +2,13 @@
 #include "propagate.cu"
 #include "explore.cu"
 #include "circumSphere.h"
+#include "sortNeighbours.cu"
 
 #include <stdint.h>
 #include <curand_kernel.h>
 #define DEBUG
 
-__global__ void RSD_Imp(real3* d_points, uint32_t* d_neighbors, int NPoints, uint32_t* d_delaunay, const int MaxOffset, curandState* globalState,
+__global__ void RSD_Imp(real3* d_points, uint32_t* d_neighbors, int NPoints, uint32_t* d_delaunay, curandState* globalState,
 	uint32_t * d_triangluate,
 	bool * d_bMarkers,
 	uint32_t NumTriangultePoints){
@@ -20,11 +21,10 @@ __global__ void RSD_Imp(real3* d_points, uint32_t* d_neighbors, int NPoints, uin
 
 	uint3 exploredID;
 	real3 sharedVertex;
-	/*
+	sortNeighbours();
 	explore(vertexID,
 	        d_points,
-	        d_neighbors,
-	        MaxOffset,
+	        d_neighbors,	        
 	        globalState, vertexID,
 	        exploredID,
 	        sharedVertex);
@@ -44,16 +44,24 @@ __global__ void RSD_Imp(real3* d_points, uint32_t* d_neighbors, int NPoints, uin
 
 			real dist = cuDist(d_points[i].x,d_points[i].y,d_points[i].z, x_cirm, y_cirm, z_cirm);
 			if(dist+0.000001 < r_cirm){
-			//	printf("Invalud vertex thread(%i) circumSphere( %f,%f, %f, %f ) insidePoint( %f,%f, %f )\n",tid, x_cirm, y_cirm, z_cirm, sqrt(r_cirm), d_points[i].x,d_points[i].y,d_points[i].z);
+				uint32_t base = MaxOffsets* vertexID;//base for index the neighbour list 
+				uint32_t neighbour_count = d_neighbors[base]; //number of neighbour around this vertex
+				bool true_invalid = false;;
+				for(uint32_t j=1; j<neighbour_count; j++){
+					if(d_neighbors[base + j] == i){
+						true_invalid = true;
+						break;
+					}
+				}
+				if(true_invalid){
+					printf("\n TRUE Invalid vertexID (%d) circumSphere( %f,%f, %f, %f ) insidePoint( %f,%f, %f )\n",vertexID, x_cirm, y_cirm, z_cirm, sqrt(r_cirm), d_points[i].x,d_points[i].y,d_points[i].z);
+				}else{
+					printf("\n FALSE Invalid vertexID thread(%d)", int(tid));
+				}
 
 			}
 		}
 #endif
-	//printf("\n FINAL sharedVertex.x= %f sharedVertex.y= %f sharedVertex.z= %f\n", sharedVertex.x, sharedVertex.y, sharedVertex.z);
-	//printf("\n FINAL tid =%u, exploredID.x= %d exploredID.y= %d exploredID.z= %d\n",tid, int(exploredID.x), int(exploredID.y), int(exploredID.z));
-	
-
-  */
 
 	exploredID.x = 88;
 	exploredID.y = 97;
@@ -65,10 +73,10 @@ __global__ void RSD_Imp(real3* d_points, uint32_t* d_neighbors, int NPoints, uin
 
 	// todo: read in the beginning
 	real3 currentPoint = d_points[vertexID];
-	uint32_t base = MaxOffset* vertexID;//base for index the neighbour list 
+	uint32_t base = MaxOffsets* vertexID;//base for index the neighbour list 
 	uint32_t neighbour_count = d_neighbors[base]; //number of neighbour around this vertex
 
 	// Now we have 3 neighbors and a vertex:
-	Propagate(currentPoint, tid, exploredID, sharedVertex, d_points, d_delaunay, d_neighbors, base, neighbour_count, d_bMarkers);
+	//Propagate(currentPoint, tid, exploredID, sharedVertex, d_points, d_delaunay, d_neighbors, base, neighbour_count, d_bMarkers);
 
 }

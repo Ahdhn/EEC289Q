@@ -23,6 +23,7 @@
 #include "validate.h"
 #include "extractTets.h"
 #include "circumSphere.h"
+#include "defines.h"
 
 #ifdef _WIN32
 #define DEVICE_ID 0
@@ -42,7 +43,7 @@ __global__ void initialise_curand_on_kernels(curandState * state, unsigned long 
 
 int main(int argc, char**argv){
 	//0) Generate the input points
-	PointsGen("../data/tiny.txt", 100);
+	//PointsGen("../data/tiny.txt", 100);
 
 	DeviceQuery(DEVICE_ID);
 	
@@ -57,24 +58,24 @@ int main(int argc, char**argv){
 	//2) Build Data Structure
 	kdtree tree; 
 	uint32_t* h_neighbors;
-	int MaxOffset = 32;
+	//int MaxOffset = MaxOffsets;
 	tree.bulkBuild(Points, NumPoints);
-	BuildNeighbors(tree, NumPoints, h_neighbors, MaxOffset);
+	BuildNeighbors(tree, NumPoints, h_neighbors, MaxOffsets);
 	//TestTree(tree, NumPoints);
 
 	std::fstream file("tree.csv", std::ios::out);
 	file.precision(30);
 	file<<"x coord, y coord, z coord, radius"<<std::endl;
 	for(int i=0;i<NumPoints;i++){
-		file<<Points[i].x<<", "<<Points[i].y<<", "<<Points[i].z<< ", "<< 0.001f/*+real(i)/(2.0*NumPoints)*/<<std::endl;
+		file<<Points[i].x<<", "<<Points[i].y<<", "<<Points[i].z<< ", "<< 0.001f+real(i)/(2.0*NumPoints)<<std::endl;
 	}
 	file.close();
+	
 	
 	bool * h_bMarkers = new bool[NumPoints];
 	uint32_t * h_triangluate = new uint32_t[NumPoints];
 	uint32_t NumTriangultePoints = 0;
-	for (int i = 0; i<NumPoints; i++)
-	{
+	for (int i = 0; i<NumPoints; i++){
 		h_bMarkers[i] = 1;
 		// boundary
 		if (Points[i].x < 0.0) continue;
@@ -92,11 +93,11 @@ int main(int argc, char**argv){
 	real3* d_points = NULL; uint32_t* d_neighbors = NULL; uint32_t* d_delaunay = NULL;
 	uint32_t * d_triangluate; bool * d_bMarkers;
 
-	HANDLE_ERROR(cudaMalloc((void**)&d_delaunay, NumPoints * MaxOffset * sizeof(uint32_t)));
+	HANDLE_ERROR(cudaMalloc((void**)&d_delaunay, NumPoints * MaxOffsets * sizeof(uint32_t)));
 	HANDLE_ERROR(cudaMalloc((void**)&d_points, NumPoints * sizeof(real3)));
 	HANDLE_ERROR(cudaMemcpy(d_points, Points, NumPoints * sizeof(real3), cudaMemcpyHostToDevice));	
-	HANDLE_ERROR(cudaMalloc((void**)&d_neighbors, NumPoints * MaxOffset * sizeof(uint32_t)));
-	HANDLE_ERROR(cudaMemcpy(d_neighbors, h_neighbors, NumPoints * MaxOffset * sizeof(uint32_t), cudaMemcpyHostToDevice));
+	HANDLE_ERROR(cudaMalloc((void**)&d_neighbors, NumPoints * MaxOffsets * sizeof(uint32_t)));
+	HANDLE_ERROR(cudaMemcpy(d_neighbors, h_neighbors, NumPoints * MaxOffsets * sizeof(uint32_t), cudaMemcpyHostToDevice));
 	
 	//boundary + to triangulate
 	HANDLE_ERROR(cudaMalloc((void**)&d_triangluate, NumTriangultePoints * sizeof(uint32_t)));
@@ -112,22 +113,23 @@ int main(int argc, char**argv){
 	HANDLE_ERROR(cudaMalloc(&deviceStates, num * sizeof(curandState)));
 	initialise_curand_on_kernels << <num / 1024 + 1, 1024 >> >(deviceStates, unsigned(time(NULL)));
 	HANDLE_ERROR(cudaDeviceSynchronize());
+	std::cout<<" NumTriangultePoints= "<<NumTriangultePoints<<std::endl;
 
-
-	//4) Launch kernels and record time
-	RSD_Imp << <1, NumTriangultePoints >> > (d_points, d_neighbors, NumPoints, d_delaunay, MaxOffset, deviceStates,
-		d_triangluate,d_bMarkers, NumTriangultePoints);
-
+	//4) Launch kernels and record time			
+	RSD_Imp << <1, NumPoints >>> (d_points, d_neighbors, NumPoints, d_delaunay, deviceStates,d_triangluate,d_bMarkers, NumTriangultePoints);
 	HANDLE_ERROR(cudaGetLastError());
 	HANDLE_ERROR(cudaDeviceSynchronize());
+	
+
+	exit(0);
 
 	//5) Move results to CPU
-	uint32_t* h_delaunay = new uint32_t[NumPoints * MaxOffset];
-	HANDLE_ERROR(cudaMemcpy(h_delaunay, d_delaunay, NumPoints * MaxOffset * sizeof(uint32_t), cudaMemcpyDeviceToHost));
+	uint32_t* h_delaunay = new uint32_t[NumPoints * MaxOffsets];
+	HANDLE_ERROR(cudaMemcpy(h_delaunay, d_delaunay, NumPoints * MaxOffsets * sizeof(uint32_t), cudaMemcpyDeviceToHost));
 
 	//6) Check correctness of the construction
-	std::vector<std::vector<uint32_t>> myTets = extractTets(NumPoints, h_delaunay, MaxOffset);
-	validate(myTets, Points, h_neighbors,MaxOffset);	
+	std::vector<std::vector<uint32_t>> myTets = extractTets(NumPoints, h_delaunay, MaxOffsets);
+	validate(myTets, Points, h_neighbors,MaxOffsets);	
 
 	//7) Release memory
 
