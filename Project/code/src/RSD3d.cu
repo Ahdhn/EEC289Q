@@ -70,7 +70,7 @@ int main(int argc, char**argv){
 		file<<Points[i].x<<", "<<Points[i].y<<", "<<Points[i].z<< ", "<< 0.001f+real(i)/(2.0*NumPoints)<<std::endl;
 	}
 	file.close();
-	
+
 	
 	bool * h_bMarkers = new bool[NumPoints];
 	uint32_t * h_triangluate = new uint32_t[NumPoints];
@@ -115,14 +115,12 @@ int main(int argc, char**argv){
 	HANDLE_ERROR(cudaDeviceSynchronize());
 	std::cout<<" NumTriangultePoints= "<<NumTriangultePoints<<std::endl;
 
-	//4) Launch kernels and record time			
+	//4) Launch kernels and record time		
 	RSD_Imp << <1, NumPoints >>> (d_points, d_neighbors, NumPoints, d_delaunay, deviceStates,d_triangluate,d_bMarkers, NumTriangultePoints);
 	HANDLE_ERROR(cudaGetLastError());
 	HANDLE_ERROR(cudaDeviceSynchronize());
 	
-
-	exit(0);
-
+	
 	//5) Move results to CPU
 	uint32_t* h_delaunay = new uint32_t[NumPoints * MaxOffsets];
 	HANDLE_ERROR(cudaMemcpy(h_delaunay, d_delaunay, NumPoints * MaxOffsets * sizeof(uint32_t), cudaMemcpyDeviceToHost));

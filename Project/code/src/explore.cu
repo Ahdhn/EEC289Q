@@ -22,8 +22,9 @@ __device__ __forceinline__ uint32_t NeighbourTriming(const real x_vertex, const 
 	//return the trimmed spoke, the neighbour that trimmed it the shortest 
 	uint32_t trimming_neighbour = UINT32_MAX;
 
-	for(uint32_t i=1; i<= neighbour_count; i++){
+	for(uint32_t i=1; i<= neighbour_count; i++){		
 		uint32_t myNeighbour = d_neighbors[base + i];
+		//if(myNeighbour != 90 ){continue;	}
 		if(myNeighbour == skip1 || myNeighbour == skip2 || myNeighbour == skip3 || myNeighbour == skip4){ continue; }
 		real x_neighbour(d_points[myNeighbour].x),
 		     y_neighbour(d_points[myNeighbour].y),
@@ -45,6 +46,10 @@ __device__ __forceinline__ uint32_t NeighbourTriming(const real x_vertex, const 
 			trimmingN_x = x_neighbour;
 			trimmingN_y = y_neighbour;
 			trimmingN_z = z_neighbour;
+			/*if(myNeighbour == 90){
+				printf("\n plan( %f,%f,%f, %f,%f,%f )\n", norm_p_x, norm_p_y, norm_p_z, mid_x, mid_y, mid_z);
+			}*/
+
 		}		
 	}
 	return trimming_neighbour;
@@ -93,7 +98,7 @@ __device__ __forceinline__ uint32_t ThreeDSpoking(const uint32_t VertexID, //Inp
 	/*printf("\n 2) spoke3d_end( %f,%f,%f )", spoke3d_x_end, spoke3d_y_end, spoke3d_z_end);
 	printf("\n grandparent( %f,%f,%f )", grandparent_x, grandparent_y, grandparent_z);
 	printf("\n 3dspoke_plan( %f,%f,%f, %f,%f,%f )\n", grandparent_x - x_vertex, grandparent_y- y_vertex , grandparent_z- z_vertex, 
-			(grandparent_x + x_vertex)/2.0, (grandparent_y + y_vertex)/2.0 , (grandparent_z + z_vertex)/2.0);*/	
+			(grandparent_x + x_vertex)/2.0, (grandparent_y + y_vertex)/2.0 , (grandparent_z + z_vertex)/2.0);*/
 
 	return grandparent;
 }
@@ -227,13 +232,32 @@ __device__ __forceinline__ void explore(uint32_t vertexID, //Input: vertex to ex
 	     y_vertex(d_points[vertexID].y), 
 	     z_vertex(d_points[vertexID].z);
 
-	//printf("\n myVertex( %f,%f,%f )\n", x_vertex, y_vertex, z_vertex);
+	
 
 	uint32_t base = MaxOffsets* vertexID;//base for index the neighbour list 
 	uint32_t neighbour_count = d_neighbors[base]; //number of neighbour around this vertex
-	real grandparent_x, grandparent_y, grandparent_z,
-	     parent_x, parent_y, parent_z;
-	     
+	real grandparent_x, grandparent_y, grandparent_z, parent_x, parent_y, parent_z;
+	/*if(vertexID == 75){		
+		printf("\n myVertex( %f,%f,%f )\n", x_vertex, y_vertex, z_vertex);
+		printf("\n myVertex90( %f,%f,%f )\n", d_points[90].x,d_points[90].y, d_points[90].z);
+		printf("\n myVertex46( %f,%f,%f )\n", d_points[46].x,d_points[46].y, d_points[46].z);
+		printf("\n myVertex78( %f,%f,%f )\n", d_points[78].x,d_points[78].y, d_points[78].z);
+		printf("\n myVertex81( %f,%f,%f )\n", d_points[81].x,d_points[81].y, d_points[81].z);
+		real spoke3d_x(534.534241), spoke3d_y(519.639343), spoke3d_z(634.244080);
+		real trimmingN_x, trimmingN_y, trimmingN_z;
+		uint32_t timID = NeighbourTriming(x_vertex, y_vertex, z_vertex,
+	                     -0.008269, 0.339856, 0.087679,
+	                     spoke3d_x, spoke3d_y, spoke3d_z,
+	                     trimmingN_x, trimmingN_y, trimmingN_z, //Output: last neighbour to trim the spoke 
+	                      46, 78, 81, 81,//Input: neighbour to skip
+						neighbour_count, //Input: number of my vertex neighbours 
+						base, //Input: base for indexing neighbour list 
+						d_neighbors, //Input: all neighbours 
+						d_points);
+		printf("\n spoke1d_end( %f,%f,%f )", spoke3d_x, spoke3d_y, spoke3d_z);
+		printf("\n timID= %i, trimmingSample( %f,%f,%f )\n",timID, trimmingN_x, trimmingN_y, trimmingN_z);
+	}
+	return;*/
 
 	
 	//Shot and trim a 3D spoke with all neighbours and keep a record for the last trimming 
