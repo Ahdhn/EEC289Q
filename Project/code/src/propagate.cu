@@ -158,7 +158,7 @@ __device__  uint32_t getNewCircum(
 }
 __device__ void Propagate(
 	real3& curPoint, 
-	int& tid, 
+	uint32_t& currentNode,
 	uint3& neighbors, 
 	real3& vertex, 
 	real3* d_points, 
@@ -176,7 +176,7 @@ __device__ void Propagate(
 
 	//
 
-	uint32_t currentNode = tid;
+	//uint32_t currentNode = tid;
 	bool seedB = d_bMarkers[currentNode];
 
 	const int queueMaxSize = 40;

@@ -116,7 +116,7 @@ int main(int argc, char**argv){
 	std::cout<<" NumTriangultePoints= "<<NumTriangultePoints<<std::endl;
 
 	//4) Launch kernels and record time		
-	RSD_Imp << <1, NumPoints >>> (d_points, d_neighbors, NumPoints, d_delaunay, deviceStates,d_triangluate,d_bMarkers, NumTriangultePoints);
+	RSD_Imp << <1, NumTriangultePoints >> > (d_points, d_neighbors, NumPoints, d_delaunay, deviceStates, d_triangluate, d_bMarkers, NumTriangultePoints);
 	HANDLE_ERROR(cudaGetLastError());
 	HANDLE_ERROR(cudaDeviceSynchronize());
 	

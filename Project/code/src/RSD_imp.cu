@@ -22,7 +22,7 @@ __global__ void RSD_Imp(real3* d_points, uint32_t* d_neighbors, int NPoints, uin
 		return; 
 	}
 
-	int vertexID = d_triangluate[tid];
+	uint32_t vertexID = d_triangluate[tid];
 	uint3 exploredID;
 	real3 sharedVertex;	
 
