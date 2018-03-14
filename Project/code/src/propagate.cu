@@ -177,7 +177,7 @@ __device__ void Propagate(
 	//
 
 	//uint32_t currentNode = tid;
-	bool seedB = d_bMarkers[currentNode];
+	//bool seedB = d_bMarkers[currentNode];
 
 	const int queueMaxSize = 40;
 	const int delMaxSize = 40;
@@ -221,7 +221,7 @@ __device__ void Propagate(
 	uint32_t node00, node10, node20;
 	uint32_t newNeighbor;
 	uint32_t newNeighbor0;
-	bool isBoundary;
+	//bool isBoundary;
 
 	//real spokeEndX, spokeEndY, spokeEndZ;
 //	NeighbourTriming(vertexQueue[0].x, )
@@ -246,9 +246,9 @@ __device__ void Propagate(
 		real3 node1Loc = d_points[node1];
 		real3 node2Loc = d_points[node2];
 		
-		bool node0B = d_bMarkers[node0];
-		bool node1B = d_bMarkers[node1];
-		bool node2B = d_bMarkers[node2];
+		//bool node0B = d_bMarkers[node0];
+		//bool node1B = d_bMarkers[node1];
+		//bool node2B = d_bMarkers[node2];
 
 		//printf("%f, %f, %f \n", spokeSt.x, spokeSt.y, spokeSt.z);
 		//
