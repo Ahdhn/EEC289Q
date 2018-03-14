@@ -179,8 +179,8 @@ __device__ void Propagate(
 	uint32_t currentNode = tid;
 	bool seedB = d_bMarkers[currentNode];
 
-	const int queueMaxSize = 32;
-	const int delMaxSize = 32;
+	const int queueMaxSize = 40;
+	const int delMaxSize = 40;
 
 	int queueSize = 1;
 	uint3 neighborsQueue[queueMaxSize];  // tets

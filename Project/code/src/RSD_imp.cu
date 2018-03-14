@@ -26,6 +26,11 @@ __global__ void RSD_Imp(real3* d_points, uint32_t* d_neighbors, int NPoints, uin
 	uint3 exploredID;
 	real3 sharedVertex;	
 
+	real3 currentPoint = d_points[vertexID];
+	uint32_t base = MaxOffsets* vertexID;//base for index the neighbour list 
+	uint32_t neighbour_count = d_neighbors[base]; //number of neighbour around this vertex
+
+
 
 #ifdef UseSharedMem
 	__shared__ uint32_t sh_delaunay[MaxOffsets*NumThreads];
@@ -86,20 +91,9 @@ __global__ void RSD_Imp(real3* d_points, uint32_t* d_neighbors, int NPoints, uin
 		}
 #endif
 
-	exploredID.x = 88;
-	exploredID.y = 97;
-	exploredID.z = 95;
 
-	sharedVertex.x = 0.517865996449;
-	sharedVertex.y = 0.406874834770;
-	sharedVertex.z = -0.483357391886;
-
-	// todo: read in the beginning
-	real3 currentPoint = d_points[vertexID];
-	uint32_t base = MaxOffsets* vertexID;//base for index the neighbour list 
-	uint32_t neighbour_count = d_neighbors[base]; //number of neighbour around this vertex
 
 	// Now we have 3 neighbors and a vertex:
-	//Propagate(currentPoint, tid, exploredID, sharedVertex, d_points, d_delaunay, d_neighbors, base, neighbour_count, d_bMarkers);
+	Propagate(currentPoint, vertexID, exploredID, sharedVertex, d_points, d_delaunay, d_neighbors, base, neighbour_count, d_bMarkers);
 
 }
