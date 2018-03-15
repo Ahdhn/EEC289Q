@@ -3,8 +3,8 @@ static void HandleError(cudaError_t err, const char *file, int line) {
 	//Error handling micro, wrap it around function whenever possible
 	if (err != cudaSuccess) {
 		printf("\n%s in %s at line %d\n", cudaGetErrorString(err), file, line);
-		//system("pause");
-		exit(EXIT_FAILURE);
+		system("pause");
+		//exit(EXIT_FAILURE);
 	}
 }
 #define HANDLE_ERROR( err ) (HandleError( err, __FILE__, __LINE__ ))
@@ -175,7 +175,7 @@ void BuildNeighbors(kdtree&tree, size_t NumPoints, uint32_t*& h_neighbors, size_
 		h_neighbors[start] = 0;
 		tree.treePointsInsideSphere(iPoint, r, (&h_neighbors[start] + 1), h_neighbors[start]);
 		if (h_neighbors[start] > offset - 1)
-			printf("Error! in line %i.\n", __LINE__);
+			printf("Error! in line %i (Building Neighbors). Increase offset.\n", __LINE__);
 	}
 }
 template <typename T>
