@@ -1,10 +1,15 @@
 #pragma once
+#include "defines.h"
+
 static void HandleError(cudaError_t err, const char *file, int line) {
 	//Error handling micro, wrap it around function whenever possible
 	if (err != cudaSuccess) {
 		printf("\n%s in %s at line %d\n", cudaGetErrorString(err), file, line);
+#ifdef _WIN32
 		system("pause");
-		//exit(EXIT_FAILURE);
+#else
+		exit(EXIT_FAILURE);
+#endif
 	}
 }
 #define HANDLE_ERROR( err ) (HandleError( err, __FILE__, __LINE__ ))
@@ -164,11 +169,11 @@ void TestTree(kdtree& tree, size_t NumPoints)
 	printf("All good!\n");
 
 }
-void BuildNeighbors(kdtree&tree, size_t NumPoints, uint32_t*& h_neighbors, size_t offset)
+void BuildNeighbors(kdtree&tree, size_t NumPoints, uint32_t*& h_neighbors, size_t offset, const real r)
 {
 	h_neighbors = new uint32_t[NumPoints* offset];
 	memset(h_neighbors, 0, NumPoints* offset * sizeof(uint32_t));
-	real r = real(1.0);
+	//real r = real(0.2);
 	for (size_t iPoint = 0; iPoint < NumPoints; iPoint++)
 	{
 		size_t start = iPoint * offset;
@@ -189,4 +194,22 @@ inline T Dist(T x1, T y1, T z1, T x2, T y2, T z2){
 	dy *= dy;
 	dz *= dz;
 	return dx + dy + dz;
+}
+void SaveNeighborsCSV(std::string FileName, int Num, uint32_t* con){
+	
+	std::fstream file(FileName.c_str(), std::ios::out);
+	file.precision(30);
+
+	for (int v = 0; v < Num; v++){
+		file << v;
+		int base = v * MaxOffsets;
+		int numNeighbors = con[base];
+		for (size_t i = 1; i <= numNeighbors; i++)
+		{
+			file << "," << con[base + i] + 1;
+
+		}
+		file << std::endl;
+	}
+	file.close();
 }

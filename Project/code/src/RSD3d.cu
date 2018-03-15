@@ -43,7 +43,7 @@ __global__ void initialise_curand_on_kernels(curandState * state, unsigned long 
 
 int main(int argc, char**argv){
 	//0) Generate the input points
-	//PointsGen("../data/tiny.txt", 100);
+	//PointsGen("../data/small.txt", 1000);
 
 	DeviceQuery(DEVICE_ID);
 	
@@ -51,7 +51,8 @@ int main(int argc, char**argv){
 	//1) Read input set of points
 	int NumPoints;
 	real3* Points=NULL;
-	ReadPoints("../data/tiny.txt",NumPoints, Points);
+	//ReadPoints("../data/0.1.dat",NumPoints, Points);
+	ReadPoints(argv[1],NumPoints, Points);
 
 
 
@@ -60,7 +61,7 @@ int main(int argc, char**argv){
 	uint32_t* h_neighbors;
 	//int MaxOffset = MaxOffsets;
 	tree.bulkBuild(Points, NumPoints);
-	BuildNeighbors(tree, NumPoints, h_neighbors, MaxOffsets);
+	BuildNeighbors(tree, NumPoints, h_neighbors, MaxOffsets, atof(argv[2]));
 	//TestTree(tree, NumPoints);
 
 	std::fstream file("tree.csv", std::ios::out);
@@ -126,9 +127,10 @@ int main(int argc, char**argv){
 	uint32_t* h_delaunay = new uint32_t[NumPoints * MaxOffsets];
 	HANDLE_ERROR(cudaMemcpy(h_delaunay, d_delaunay, NumPoints * MaxOffsets * sizeof(uint32_t), cudaMemcpyDeviceToHost));
 
+	SaveNeighborsCSV("del.csv", NumPoints, h_delaunay);
 	//6) Check correctness of the construction
-	std::vector<std::vector<uint32_t>> myTets = extractTets(NumPoints, h_delaunay, MaxOffsets);
-	validate(myTets, Points, h_neighbors,MaxOffsets);	
+	//std::vector<std::vector<uint32_t>> myTets = extractTets(NumPoints, h_delaunay, MaxOffsets);
+	//validate(myTets, Points, h_neighbors,MaxOffsets);	
 
 	//7) Release memory
 

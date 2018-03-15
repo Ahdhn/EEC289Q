@@ -94,6 +94,6 @@ __global__ void RSD_Imp(real3* d_points, uint32_t* d_neighbors, int NPoints, uin
 
 
 	// Now we have 3 neighbors and a vertex:
-	Propagate(currentPoint, vertexID, exploredID, sharedVertex, d_points, d_delaunay, d_neighbors, base, neighbour_count, d_bMarkers);
+	//Propagate(currentPoint, vertexID, exploredID, sharedVertex, d_points, d_delaunay, d_neighbors, base, neighbour_count, d_bMarkers);
 
 }

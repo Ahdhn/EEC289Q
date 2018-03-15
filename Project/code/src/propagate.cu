@@ -179,7 +179,7 @@ __device__ void Propagate(
 	//uint32_t currentNode = tid;
 	//bool seedB = d_bMarkers[currentNode];
 
-	const int queueMaxSize = 40;
+	const int queueMaxSize = 50;
 	const int delMaxSize = 40;
 
 	int queueSize = 1;

@@ -88,7 +88,7 @@ __device__ __forceinline__ uint32_t ThreeDSpoking_sh(const uint32_t VertexID, //
 		    	                          spoke3d_x_st, spoke3d_y_st, spoke3d_z_st, 
 			                              spoke3d_x_end, spoke3d_y_end, spoke3d_z_end,
 		        	                      grandparent_x, grandparent_y, grandparent_z,
-		            	                  0,0,0,0,
+		            	                  500, 500, 500, 500,
 		                	              neighbour_count, sh_points);		
 
 		//if(grandparent == UINT32_MAX){printf(" Invalid grand\n");}		
@@ -145,7 +145,7 @@ __device__ __forceinline__ uint32_t TwoDSpoking_sh(const uint32_t VertexID, //In
 								     spoke2d_x_st, spoke2d_y_st, spoke2d_z_st, 
 		    	                     spoke2d_x_end, spoke2d_y_end, spoke2d_z_end,
 		        	                 parent_x, parent_y, parent_z,
-		            	             0, grandparent, 0, 0, 
+		            	             500, grandparent, 500, 500, 
 		                	         neighbour_count, sh_points);
 		//if(parent == UINT32_MAX){printf(" Invalid parent\n");}		
 	}
@@ -206,7 +206,7 @@ __device__ __forceinline__ uint32_t OneDSpoking_sh(const uint32_t VertexID, //In
 								    spoke1d_x_st, spoke1d_y_st, spoke1d_z_st, 
 		    	                    spoke1d_x_end, spoke1d_y_end, spoke1d_z_end,
 		        	                child_x, child_y, child_z,
-		            	            0, grandparent, parent, 0, 
+		            	            500, grandparent, parent, 500, 
 		                	        neighbour_count, sh_points);
 		//if(child == UINT32_MAX){printf(" Invalid child\n");}		
 	}

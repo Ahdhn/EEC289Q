@@ -69,7 +69,7 @@ __device__ __host__ real circumSphere(const real x1, const real y1, const real z
 	M11 = Determinant4(A);
 
 	if (abs(M11)<real(_tol)) {
-		printf("\n Warning 0 at Circumsphere()...\n");
+		//printf("\n Warning 0 at Circumsphere()...\n");
 		return -1;	
 	}
 
