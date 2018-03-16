@@ -1,7 +1,7 @@
 \documentclass[12pt] {article}
 \usepackage{times}
 \usepackage[margin=0.8in,bottom=1in,top=0.4in]{geometry}
-
+\usepackage{hyperref}
 \usepackage{hhline}
 \usepackage{subfig}
 \usepackage{amsmath}
@@ -86,7 +86,7 @@ The input to the algorithm is a set of samples in 3D space. The algorithm proces
 
 \begin{figure}[!tbh]
 \centering        
-   \subfloat {\includegraphics[width=\textwidth]{algo.pdf}}
+   \subfloat {\includegraphics[width=0.7\textwidth]{algo.pdf}}
    \caption{Overview of the RSD algorithm in 3D. From a-d is the \emph{Explore} phase, e-f is the \emph{Propagate} phase.}
    \label{fig:algo}
 \end{figure}
@@ -116,20 +116,27 @@ We choose to process each sample using one thread. Since the distribution of the
 \item The number of edges and faces for each sample in the output varies. This can cause more than two-way thread divergence within a warp. 
 \end{enumerate}
 
-We can eliminate the first by making sure all samples will have the same number of neighbors by padding. We noticed that the thread divergence cause by the second was more severe. 
+We can eliminate the first by making sure all samples will have the same number of neighbors by padding. We noticed that the thread divergence caused by the second was more severe. 
 
 We choose to use small blocks such i.e., 32-64 threads per block. This helped us load all the information to shared memory in coalesced manner as much as possible. Larger blocks also sometimes were not feasible since the kernel requires many registers to do all the geometric work. 
 
 \section*{Results}
-
-We compare our implementation performance with gStar4D~\citep{Ashwin2012GPUDelaunay}, a CUDA implementation of the gStar4D algorithm. The testing platform uses a Tesla K40c GPU. Figure~\ref{fig:timing} shows that our implementation achieves $\approx4$x speed up over gStar4D. Keeping in mind that we perform the neighbor search queries offline and .. *Why? what do they do?*
+Our implementation can be found under \url{https://github.com/Ahdhn/EEC289Q/tree/master/Project/code/src}. We tested our code using CUDA 9.1 on a Tesla K40c GPU. We compared our implementation with gStar4D~\citep{cao2014gpu}. gStar4D is a CUDA implementation for adaption of the \emph{insertion} algorithm. Figure~\ref{fig:timing} shows that our implementation achieves~$\approx4$x speed up over gStar4D. Keeping in mind that we perform the neighbor search queries offline. Since gStar4D relies on samples being inserted incrementally and then the non-delaunay tetrahedron are updated with each insertion using edge flipping, their data structure are dynamically changes all the time. However, our algorithm does not need these dynamic changes. If the offline building of the kd-tree happens to be the bottleneck, we could easily build on the GPU first before calling our kernel.
 
 \begin{figure}[!tbh]
 \centering        
-   \subfloat {\includegraphics[width=0.8\textwidth]{timing.pdf}}
+   \subfloat {\includegraphics[width=0.6\textwidth]{timing.pdf}}
    \caption{Our performance compared to gStar4D.}
    \label{fig:timing}
 \end{figure}
+
+
+
+\section*{Discussion}
+Even thought our implementation is not fully polished, we were able to advance over a recent work to tackle the Delaunay triangulation in 3D on synthetic data set. Due to the need for pre-allocation, there are many parameters that can be tuned for optimal performance. Shared memory can be better utilized to eliminate bank conflicts. 
+
+After the implementation, we realized that the algorithm depends on depth-first search in which, after the explore phase, we keep search along one branch of the tree of all possible solutions. An alternative implementation is to try breadth-first search. This can exhibits more fine-grained parallelism by using more than one thread per sample. However, such implementation might lead to most of threads being idle since the tree get pruned quickly. 
+
 
 \bibliography{mybib}
 \end{document}
