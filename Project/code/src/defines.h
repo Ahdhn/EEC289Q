@@ -1,4 +1,4 @@
 #pragma once 
 
-#define MaxOffsets 64
+#define MaxOffsets 128
 #define NumThreads 32

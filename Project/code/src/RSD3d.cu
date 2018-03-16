@@ -117,12 +117,29 @@ int main(int argc, char**argv){
 	std::cout<<" NumTriangultePoints= "<<NumTriangultePoints<<std::endl;
 
 	//4) Launch kernels and record time		
+	float exec_time = 0.0f;
+	cudaEvent_t start, stop;
+	cudaEventCreate(&start);
+	cudaEventCreate(&stop);
+	cudaEventRecord(start, NULL);
+
 	int numBlocks = NumTriangultePoints / NumThreads + 1;
 	RSD_Imp << <numBlocks, NumThreads >> > (d_points, d_neighbors, NumPoints, d_delaunay, deviceStates, d_triangluate, d_bMarkers, NumTriangultePoints);
+	
+
+	cudaEventRecord(stop, NULL);
+	cudaEventSynchronize(stop);
+	cudaEventElapsedTime(&exec_time, start, stop);
+
+	cudaEventDestroy(start);
+	cudaEventDestroy(stop);
+
 	HANDLE_ERROR(cudaGetLastError());
 	HANDLE_ERROR(cudaDeviceSynchronize());
 	
 	
+	printf("Consturction Time: %f mSec.\n", exec_time);
+
 	//5) Move results to CPU
 	uint32_t* h_delaunay = new uint32_t[NumPoints * MaxOffsets];
 	HANDLE_ERROR(cudaMemcpy(h_delaunay, d_delaunay, NumPoints * MaxOffsets * sizeof(uint32_t), cudaMemcpyDeviceToHost));
