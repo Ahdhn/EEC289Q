@@ -2,6 +2,7 @@
 //construct the circumsphere of four points in 3d 
 #include "spokes.cu"
 #include "utilities.h"
+#include "defines.h"
 #include <stdio.h>
 
 __device__ __host__ __device__ real  Determinant3(real A[4][4])
@@ -104,7 +105,7 @@ __device__ __host__ real circumSphere(const real x1, const real y1, const real z
 	zo = real(0.5)*M14 / M11;
 
 	real rrr = xo*xo + yo*yo + zo*zo - M15 / M11;
-
+#ifdef DEBUG
 	real dist1, dist2, dist3, dist4;
 	dist1 = cuDist(xo, yo, zo, x1, y1, z1);
 	dist2 = cuDist(xo, yo, zo, x2, y2, z2);
@@ -114,5 +115,7 @@ __device__ __host__ real circumSphere(const real x1, const real y1, const real z
 	if (abs(dist1 - rrr)>real(_tol) || abs(dist2 - rrr)>real(_tol) || abs(dist3 - rrr)>real(_tol) || abs(dist4 - rrr)>real(_tol)){
 		printf("\n Error 0 at Circumsphere(). Difference are (%f, %f, %f, %f) \n", abs(dist1 - rrr), abs(dist2 - rrr), abs(dist3 - rrr), abs(dist4 - rrr));
 	}	
+#endif
+
 	return rrr;
 }

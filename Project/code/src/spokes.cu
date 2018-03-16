@@ -37,6 +37,7 @@ __device__  __forceinline__ real generateRAND(curandState* globalState, int ind)
 
 	//stolen from https://nidclip.wordpress.com/2014/04/02/cuda-random-number-generation/
 	//copy state to local mem
+	ind = ind%1024;
 	curandState localState = globalState[ind];
 	//apply uniform distribution with calculated random
 	real rndval = curand_uniform(&localState);

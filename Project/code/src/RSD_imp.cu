@@ -7,7 +7,7 @@
 #include "moveDataToSharedMem.cu"
 #include <stdint.h>
 #include <curand_kernel.h>
-#define DEBUG
+
 //#define UseSharedMem
 
 __global__ void RSD_Imp(real3* d_points, uint32_t* d_neighbors, int NPoints, uint32_t* d_delaunay,  
