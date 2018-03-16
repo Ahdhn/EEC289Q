@@ -93,7 +93,7 @@ The input to the algorithm is a set of samples in 3D space. The algorithm proces
 
 \section*{Algorithm Details}
 Here we describe the details and how we map the algorithm into the GPU. 
-We can achieve the coalescing behavior if neighbor samples in the spatial domain are also neighbor in the memory layout i.e., the difference between indicies is small. This is because every sample need to read the coordinates of its neighbour samples. We achieve this by building balanced kd-tree on the CPU side from which we re-order the sample indices. Figure~\ref{fig:tree} shows the effect of reordering. The kd-tree is also used to range-query the neighbor of each sample. Thus, the input of the kernel is the input sample index and a list of its neighbor samples. 
+We can achieve the coalescing behavior if neighbor samples in the spatial domain are also neighbor in the memory layout i.e., the difference between indicies is small. This is because every sample need to read the coordinates of its neighbour samples. We achieve this by building a balanced kd-tree on the CPU side during which we re-order the sample indices. Figure~\ref{fig:tree} shows the effect of reordering. The kd-tree is also used to range-query the neighbor of each sample. Thus, the input of the kernel is the input sample index and a list of its neighbor samples. 
 
 For the sake of simplicity, we assume the point is in general position which can be achieved by random sampling. From that we can assume the maximum number of Delaunay edges of a sample is bounded. We set this bound to 32 for pre-allocation of memory for the output. 
 
@@ -101,7 +101,11 @@ For the sake of simplicity, we assume the point is in general position which can
 \centering        
    \subfloat [Input] {\includegraphics[width=0.35\textwidth]{tree_before.png}}
    \subfloat [Reordered] {\includegraphics[width=0.35\textwidth]{tree_after.png}}
-   \caption{The effect of reordering the samples indices based on the balanced Kd-tree. The color interprets the sample index.}
+   
+     \subfloat [Input] {\includegraphics[width=0.35\textwidth]{matrix_unbalanced.png}}
+   \subfloat [Reordered] {\includegraphics[width=0.35\textwidth]{matrix_balanced.png}}
+  
+   \caption{Top: The effect of reordering the samples while building the balanced Kd-tree (samples indices are encoded using color). Bottom: Adjacency matrix after reordering showing better locality compared to the initial input.}
    \label{fig:tree}
 \end{figure}
 
@@ -118,6 +122,14 @@ We choose to use small blocks such i.e., 32-64 threads per block. This helped us
 
 \section*{Results}
 
+We compare our implementation performance with gStar4D~\citep{Ashwin2012GPUDelaunay}, a CUDA implementation of the gStar4D algorithm. The testing platform uses a Tesla K40c GPU. Figure~\ref{fig:timing} shows that our implementation achieves $\approx4$x speed up over gStar4D. Keeping in mind that we perform the neighbor search queries offline and .. *Why? what do they do?*
+
+\begin{figure}[!tbh]
+\centering        
+   \subfloat {\includegraphics[width=0.8\textwidth]{timing.pdf}}
+   \caption{Our performance compared to gStar4D.}
+   \label{fig:timing}
+\end{figure}
 
 \bibliography{mybib}
 \end{document}

@@ -35,14 +35,6 @@ __device__ bool isAdded(uint32_t& ix, uint32_t& iy, uint32_t& iz, uint3 list[], 
 			return true;
 		}
 	}
-	//printf("Tets are:\n");
-	//
-	//for (size_t i = 0; i < size; i++)
-	//	printf("%i, %i, %i\n", list[i].x, list[i].y, list[i].z);
-	//printf("----\n");
-	//printf("%i, %i, %i\n", ix, iy, iz);
-	//printf("----\n");
-
 	return false;
 }
 __device__  uint32_t getNewCircum(
@@ -61,30 +53,7 @@ __device__  uint32_t getNewCircum(
 	uint32_t*& d_neighbors, 
 	real3*& d_points)
 {
-	//float spokeEndX, spokeEndY, spokeEndZ;
-	real3 bla;
-	//TriCircumcenter3d(curPoint.x, curPoint.y, curPoint.z,
-	//	node0Loc.x, node0Loc.y, node0Loc.z,
-	//	node1Loc.x, node1Loc.y, node1Loc.z,
-	//	newCircum.x, newCircum.y, newCircum.z);
-
-	//printf("%f, %f, %f \n", newCircum.x, newCircum.y, newCircum.z);
-	//printf("Tri corners:\n");
-	//printf("%f, %f, %f \n", curPoint.x, curPoint.y, curPoint.z);
-	//printf("%f, %f, %f \n", node0Loc.x, node0Loc.y, node0Loc.z);
-	//printf("%f, %f, %f \n", node1Loc.x, node1Loc.y, node1Loc.z);
-
-	//real3 triCenter;
-	//triCenter.x = newCircum.x;
-	//triCenter.y = newCircum.y;
-	//triCenter.z = newCircum.z;
-
-
-	//newCircum.x = 1000.0 * (newCircum.x - spokeSt.x) + spokeSt.x;
-	//newCircum.y = 1000.0 * (newCircum.y - spokeSt.y) + spokeSt.y;
-	//newCircum.z = 1000.0 * (newCircum.z - spokeSt.z) + spokeSt.z;
-	
-	
+	real3 bla;	
 	real3 uT;
 	real3 uuT, vvT;
 	uuT.x = node0Loc.x - curPoint.x;
@@ -103,44 +72,25 @@ __device__  uint32_t getNewCircum(
 	newCircum.x = 1000.0 * uT.x + spokeSt.x;
 	newCircum.y = 1000.0 * uT.y + spokeSt.y;
 	newCircum.z = 1000.0 * uT.z + spokeSt.z;
-
-	//uT.x = triCenter.x - spokeSt.x;
-	//uT.y = triCenter.y - spokeSt.y;
-	//uT.z = triCenter.z - spokeSt.z;
-	
 	
 	real dNT = thirdLoc.x * uT.x + thirdLoc.y * uT.y + thirdLoc.z * uT.z;
 	dNT -= (node0Loc.x * uT.x + node0Loc.y * uT.y + node0Loc.z * uT.z);
 
 	real dNC = newCircum.x * uT.x + newCircum.y * uT.y + newCircum.z * uT.z;
 	dNC -= (node0Loc.x * uT.x + node0Loc.y * uT.y + node0Loc.z * uT.z);
-	//if (node0 == 78 && node1 == 88 && node2 == 91)
-	//{
-	//	printf("Here we go\n");
-	//	printf("%f , %f \n", dNT, dNC);
-	//}
+
 	if (((dNT > 0.0 && dNC > 0) || (dNT < 0.0 && dNC < 0)))
 	{
-		//printf("I reversed \n");
-
 		uT.x *= -1.0;
 		uT.y *= -1.0;
 		uT.z *= -1.0;
 
-
 		newCircum.x = 1000.0 * uT.x + spokeSt.x;
 		newCircum.y = 1000.0 * uT.y + spokeSt.y;
 		newCircum.z = 1000.0 * uT.z + spokeSt.z;
-
-		//spokeSt.x = triCenter.x;
-		//spokeSt.y = triCenter.y;
-		//spokeSt.z = triCenter.z;
 	}
 	uint32_t newNeighbor;
 	
-	//printf("Ray:\n");
-	//printf("%f, %f, %f \n", spokeSt.x, spokeSt.y, spokeSt.z);
-	//printf("%f, %f, %f \n", newCircum.x, newCircum.y, newCircum.z);
 	
 	newNeighbor = NeighbourTriming(curPoint.x, curPoint.y, curPoint.z,
 		spokeSt.x, spokeSt.y, spokeSt.z,
@@ -148,11 +98,6 @@ __device__  uint32_t getNewCircum(
 		bla.x, bla.y,bla.z,
 		node0, node1, node2, currentNode, 
 		neighbour_count, base, d_neighbors, d_points);
-	
-	//printf("To Add %i \n", newNeighbor);
-	//printf("Ray:\n");
-	//printf("%f, %f, %f \n", spokeSt.x, spokeSt.y, spokeSt.z);
-	//printf("%f, %f, %f \n", newCircum.x, newCircum.y, newCircum.z);
 
 	return newNeighbor;
 }
@@ -168,19 +113,10 @@ __device__ void Propagate(
 	uint32_t neighbour_count,
 	bool * d_bMarkers)
 {
-	
-	//uint32_t numDelaunayNeighbors = 3;
-	//d_delaunay[base + 1] = neighbors.x;
-	//d_delaunay[base + 2] = neighbors.y;
-	//d_delaunay[base + 3] = neighbors.z;
-
-	//
-
-	//uint32_t currentNode = tid;
-	//bool seedB = d_bMarkers[currentNode];
 
 	const int queueMaxSize = 50;
 	const int delMaxSize = 40;
+	const int tetMaxSize = 40;
 
 	int queueSize = 1;
 	uint3 neighborsQueue[queueMaxSize];  // tets
@@ -203,28 +139,22 @@ __device__ void Propagate(
 	if (face1 > face2)
 		swapTwoValues(face1, face2);
 
-	//printf("%i , %i , %i\n", face0, face1, face2);
-
 	vertexQueue[0] = vertex;
 	neighborsQueue[0].x = face0;
 	neighborsQueue[0].y = face1;
 	neighborsQueue[0].z = face2;
 
-	uint3 testList[queueMaxSize];  // tets
+	uint3 testList[tetMaxSize];  // tets
 	uint32_t numTets = 1;
 	testList[0].x = face0;
 	testList[0].y = face1;
 	testList[0].z = face2;
 
-	//return;
 	uint32_t node0, node1, node2;
 	uint32_t node00, node10, node20;
 	uint32_t newNeighbor;
 	uint32_t newNeighbor0;
-	//bool isBoundary;
 
-	//real spokeEndX, spokeEndY, spokeEndZ;
-//	NeighbourTriming(vertexQueue[0].x, )
 	while (queueSize)
 	{
 		queueSize--;
@@ -246,26 +176,8 @@ __device__ void Propagate(
 		real3 node1Loc = d_points[node1];
 		real3 node2Loc = d_points[node2];
 		
-		//bool node0B = d_bMarkers[node0];
-		//bool node1B = d_bMarkers[node1];
-		//bool node2B = d_bMarkers[node2];
-
-		//printf("%f, %f, %f \n", spokeSt.x, spokeSt.y, spokeSt.z);
-		//
-		//printf("%f, %f, %f \n", node0Loc.x, node0Loc.y, node0Loc.z);
-		//printf("%f, %f, %f \n", node1Loc.x, node1Loc.y, node1Loc.z);
-		//printf("%f, %f, %f \n", node2Loc.x, node2Loc.y, node2Loc.z);
-		//
-		//printf("%f, %f, %f \n", curPoint.x, curPoint.y, curPoint.z);
-
-		//printf("---New tet: %i, %i, %i \n", node0, node1, node2);
-
-
 		
 		real3 newCircum;
-
-
-		//if (!seedB && !node0B && !node1B)
 		{
 			// face cur-01
 			newNeighbor = getNewCircum(
@@ -275,19 +187,15 @@ __device__ void Propagate(
 				node0, node1, node2, currentNode,
 				newCircum, neighbour_count, base, d_neighbors, d_points);
 
-			//printf("%i, %i -> %i \n", node0, node1, newNeighbor);
-
 			if (newNeighbor != UINT32_MAX)
 			{
 				if (queueSize == queueMaxSize)
 					printf("Increase Queue size!\n");
 				if (numDel == delMaxSize)
 					printf("Increase Delaunay size!\n");
-				if (numTets == queueMaxSize)
+				if (numTets == tetMaxSize)
 					printf("Increase Tets size!\n");
 
-				//numDelaunayNeighbors++;
-				//d_delaunay[base + numDelaunayNeighbors] = newNeighbor;
 				newNeighbor0 = newNeighbor;
 
 				if (node0 > node1)
@@ -316,8 +224,6 @@ __device__ void Propagate(
 					vertexQueue[queueSize].y = newCircum.y;
 					vertexQueue[queueSize].z = newCircum.z;
 					queueSize++;
-		
-				//	printf("Added %i \n", newNeighbor);
 				}
 			}
 		}
@@ -326,7 +232,6 @@ __device__ void Propagate(
 		node1 = node10;
 		node2 = node20;
 
-		//if (!seedB && !node0B && !node2B)
 		{
 			// face cur-02
 			newNeighbor = getNewCircum(
@@ -336,17 +241,13 @@ __device__ void Propagate(
 				node0, node1, node2, currentNode,
 				newCircum, neighbour_count, base, d_neighbors, d_points);
 			
-			//printf("%i, %i -> %i \n", node0, node2, newNeighbor);
-
 			if (newNeighbor != UINT32_MAX )
 			{
-				//numDelaunayNeighbors++;
-				//d_delaunay[base + numDelaunayNeighbors] = newNeighbor;
 				if (queueSize == queueMaxSize)
 					printf("Increase Queue size!\n");
 				if (numDel == delMaxSize)
 					printf("Increase Delaunay size!\n");
-				if (numTets == queueMaxSize)
+				if (numTets == tetMaxSize)
 					printf("Increase Tets size!\n");
 				newNeighbor0 = newNeighbor;
 
@@ -376,7 +277,6 @@ __device__ void Propagate(
 					vertexQueue[queueSize].y = newCircum.y;
 					vertexQueue[queueSize].z = newCircum.z;
 					queueSize++;
-					//printf("Added %i \n", newNeighbor);
 				}
 			}
 		}
@@ -384,7 +284,6 @@ __device__ void Propagate(
 		node0 = node00;
 		node1 = node10;
 		node2 = node20;
-		//if (!seedB && !node1B && !node2B)
 		{
 			// face cur-12
 			newNeighbor = getNewCircum(
@@ -393,8 +292,6 @@ __device__ void Propagate(
 				spokeSt,
 				node0, node1, node2, currentNode,
 				newCircum, neighbour_count, base, d_neighbors, d_points);
-			
-			//printf("%i, %i -> %i \n", node1, node2, newNeighbor);
 			
 			if (newNeighbor != UINT32_MAX )
 			{
@@ -416,8 +313,6 @@ __device__ void Propagate(
 
 				if (!isAdded(node1, node2, newNeighbor, testList, numTets))
 				{
-				//numDelaunayNeighbors++;
-					//d_delaunay[base + numDelaunayNeighbors] = newNeighbor;
 					if (!isAdded(newNeighbor0, delaunayList, numDel))
 						delaunayList[numDel++] = newNeighbor0;
 
@@ -434,7 +329,6 @@ __device__ void Propagate(
 					vertexQueue[queueSize].y = newCircum.y;
 					vertexQueue[queueSize].z = newCircum.z;
 					queueSize++;
-					//printf("Added %i \n", newNeighbor);
 				}
 
 			}
@@ -445,10 +339,4 @@ __device__ void Propagate(
 	d_delaunay[base] = numDel;
 	for (int i = 0; i < numDel; i++)
 		d_delaunay[base + i + 1] = delaunayList[i];
-
-	//printf("Finished propagating! \n");
-	//for (int i = 0; i < numDel; i++)
-	//	printf("%i ", delaunayList[i]);
-	//printf("Finished propagating! \n");
-
 }
