@@ -3,7 +3,7 @@
 #include "spokes.cu"
 #include "defines.h"
 #include <stdint.h>
-
+#include "defines.h"
 //Everything in global memory 
 
 //****************************************************************************************************
@@ -74,9 +74,13 @@ __device__ __forceinline__ uint32_t ThreeDSpoking(const uint32_t VertexID, //Inp
 
 	//We use the spoke end as a proxy for direction here and then set the end point correctly after that
 	uint32_t grandparent = UINT32_MAX;
+#ifdef DEBUG
 	uint32_t counter  = 0;
+#endif
 	while(grandparent == UINT32_MAX){
+#ifdef DEBUG
 		counter ++;
+#endif
 		RandSpoke3D(spoke3d_x_st, spoke3d_y_st, spoke3d_z_st, spoke3d_x_end, spoke3d_y_end, spoke3d_z_end, globalState, randID);
 	
 		spoke3d_x_end = spoke3d_x_st + 1000*spoke3d_x_end;
@@ -92,14 +96,17 @@ __device__ __forceinline__ uint32_t ThreeDSpoking(const uint32_t VertexID, //Inp
 		        	                   grandparent_x, grandparent_y, grandparent_z,
 		            	               VertexID, VertexID, VertexID, VertexID,
 		                	           neighbour_count, base, d_neighbors, d_points);
-
+#ifdef DEBUG
 		//if(grandparent == UINT32_MAX){printf(" Invalid grand\n");}				
 		if(counter > 1000){break;}
+#endif
 	}
+#ifdef DEBUG
 	if(counter > 1000){
 		printf(" OneDSpoking(), VertexID= %i (%f, %f, %f) \n",VertexID, x_vertex, y_vertex, z_vertex);
 		return UINT32_MAX;
 	}
+#endif
 	/*printf("\n 2) spoke3d_end( %f,%f,%f )", spoke3d_x_end, spoke3d_y_end, spoke3d_z_end);
 	printf("\n grandparent( %f,%f,%f )", grandparent_x, grandparent_y, grandparent_z);
 	printf("\n 3dspoke_plan( %f,%f,%f, %f,%f,%f )\n", grandparent_x - x_vertex, grandparent_y- y_vertex , grandparent_z- z_vertex, 
@@ -131,9 +138,13 @@ __device__ __forceinline__ uint32_t TwoDSpoking(const uint32_t VertexID, //Input
 	NormalizeVector(norm_p_x, norm_p_y, norm_p_z);
 
 	uint32_t parent = UINT32_MAX; 
+#ifdef DEBUG
 	uint32_t counter = 0;
+#endif
 	while (parent == UINT32_MAX){
+#ifdef DEBUG
 		counter ++;
+#endif
 		//We use the spoke end as a proxy for direction here and then set the end point correctly after that
 		RandSpoke2D(spoke2d_x_st, spoke2d_y_st, spoke2d_z_st, //2D spoke starting point 
 			        norm_p_x, norm_p_y, norm_p_z, //normal to the plane 
@@ -154,13 +165,17 @@ __device__ __forceinline__ uint32_t TwoDSpoking(const uint32_t VertexID, //Input
 		        	              parent_x, parent_y, parent_z,
 		            	          VertexID, grandparent, VertexID, VertexID, 
 		                	      neighbour_count, base, d_neighbors, d_points);
-		//if(parent == UINT32_MAX){printf(" Invalid parent\n");}		
+		//if(parent == UINT32_MAX){printf(" Invalid parent\n");}	
+#ifdef DEBUG	
 		if(counter>1000){break;}
+#endif
 	}
+#ifdef DEBUG
 	if(counter > 1000){
 		printf(" OneDSpoking(), VertexID= %i (%f, %f, %f) \n",VertexID, x_vertex, y_vertex, z_vertex);
 		return UINT32_MAX;
 	}
+#endif
 	/*printf("\n 2) spoke2d_end( %f,%f,%f )", spoke2d_x_end, spoke2d_y_end, spoke2d_z_end);
 	printf("\n parent( %f,%f,%f )", parent_x, parent_y, parent_z);
 	printf("\n 2dspoke_plan( %f,%f,%f, %f,%f,%f )\n", parent_x - x_vertex, parent_y- y_vertex , parent_z- z_vertex, 
@@ -201,9 +216,13 @@ __device__ __forceinline__ uint32_t OneDSpoking(const uint32_t VertexID, //Input
 
 	uint32_t child = UINT32_MAX; 
 	real child_x, child_y, child_z;
+#ifdef DEBUG
 	uint32_t counter = 0;
+#endif
 	while(child == UINT32_MAX){
+#ifdef DEBUG
 		counter ++;
+#endif
 		RandSpoke1D(spoke1d_x_st, spoke1d_y_st, spoke1d_z_st,
 	    	        norm_p1_x, norm_p1_y, norm_p1_z,
 	            	norm_p2_x, norm_p2_y, norm_p2_z,
@@ -224,9 +243,12 @@ __device__ __forceinline__ uint32_t OneDSpoking(const uint32_t VertexID, //Input
 		        	             child_x, child_y, child_z,
 		            	         VertexID, grandparent, parent, VertexID, 
 		                	     neighbour_count, base, d_neighbors, d_points);
-		//if(child == UINT32_MAX){printf(" Invalid child\n");}				
+		//if(child == UINT32_MAX){printf(" Invalid child\n");}	
+#ifdef DEBUG			
 		if(counter > 1000){break;}
+#endif
 	}
+#ifdef DEBUG
 	if(counter > 1000){
 		printf(" OneDSpoking(), VertexID= %i ( %f, %f, %f ) \n", VertexID, x_vertex, y_vertex, z_vertex);
 		printf(" VertexID= %i -> grandparent ( %f, %f, %f ) \n", VertexID, grandparent_x, grandparent_y, grandparent_z);
@@ -235,6 +257,7 @@ __device__ __forceinline__ uint32_t OneDSpoking(const uint32_t VertexID, //Input
 		printf(" VertexID= %i -> spoke1d_end( %f,%f,%f )\n", VertexID, spoke1d_x_end, spoke1d_y_end, spoke1d_z_end);				
 		return UINT32_MAX;
 	}
+#endif
 	/*printf("\n 2) spoke1d_end( %f,%f,%f )", spoke1d_x_end, spoke1d_y_end, spoke1d_z_end);
 	printf("\n child( %f,%f,%f )", child_x, child_y, child_z);
 	printf("\n 1dspoke_plan( %f,%f,%f, %f,%f,%f )\n", child_x - x_vertex, child_y- y_vertex , child_z- z_vertex, 
